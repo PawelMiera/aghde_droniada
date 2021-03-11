@@ -16,8 +16,6 @@ class Detection:
     def get_color_id(self):
         color_distance = 1000
         color_id = None
-        shape = self.shape
-        color = self.color
         for i, col in enumerate(Values.COLORS):
             new_distance = np.sqrt(
                 (col[0] - self.color[0]) ** 2 + (col[1] - self.color[1]) ** 2 + (col[2] - self.color[2]) ** 2)
@@ -39,6 +37,10 @@ class Detection:
 
         if self.rectangle is not None:
             x, y, w, h = self.rectangle
+            x = x - Values.BOX_SIZE_INCREASE if x > Values.BOX_SIZE_INCREASE else x
+            y = y - Values.BOX_SIZE_INCREASE if y > Values.BOX_SIZE_INCREASE else y
+            w = w + 2 * Values.BOX_SIZE_INCREASE if w + 2 * Values.BOX_SIZE_INCREASE + x < Values.CAMERA_WIDTH else w
+            h = h + 2 * Values.BOX_SIZE_INCREASE if h + 2 * Values.BOX_SIZE_INCREASE + y < Values.CAMERA_HEIGHT else h
             cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
 
         label = ""

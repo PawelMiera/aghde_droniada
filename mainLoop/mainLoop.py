@@ -16,43 +16,40 @@ class MainLoop(Thread):
         self.frame = cv2.imread("images/pole.png")
 
     def run(self):
-        try:
+
             if Values.PRINT_FPS:
                 last_time = time.time()
                 ind = 0
             while True:
-                if self.stop_loop:
-                    break
+                try:
+                    if self.stop_loop:
+                        break
 
-                #self.frame = cv2.imread("images/pole.png")
-                self.frame = self.camera.get_frame()
+                    self.frame = cv2.imread("images/pole.png")
+                    #self.frame = self.camera.get_frame()
 
-                if self.frame is None:
-                    continue
+                    if self.frame is None:
+                        continue
 
-                detections = self.detector.detect(self.frame)
+                    detections = self.detector.detect(self.frame)
 
-                for d in detections:
-                    d.draw_detection(self.frame)
+                    for d in detections:
+                        d.draw_detection(self.frame)
 
-                cv2.imshow("frame", self.frame)
+                    cv2.imshow("frame", self.frame)
 
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
+                    if cv2.waitKey(1) & 0xFF == ord('q'):
+                        break
 
-                if Values.PRINT_FPS:
-                    ind += 1
-                    if time.time() - last_time > 1:
-                        print("FPS:", ind)
-                        ind = 0
-                        last_time = time.time()
+                    if Values.PRINT_FPS:
+                        ind += 1
+                        if time.time() - last_time > 1:
+                            print("FPS:", ind)
+                            ind = 0
+                            last_time = time.time()
 
-        except ValueError as er:
-            print("Some error accured: ", str(er))
-        except KeyboardInterrupt:
-            print("Closing")
-        finally:
-            self.camera.close()
+                except Exception as e:
+                    print("Some error accrued: ", str(e))
 
     def close(self):
         self.stop_loop = True
