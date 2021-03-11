@@ -9,8 +9,10 @@ class Values:
 
     CAMERA = 0
 
-    CAMERA_WIDTH = 640
-    CAMERA_HEIGHT = 480
+    CAMERA_WIDTH = 820
+    CAMERA_HEIGHT = 616
+
+    MAX_PIXEL_AREA = CAMERA_WIDTH * CAMERA_HEIGHT
 
     TRIANGLE = 0
     SQUARE = 1
@@ -22,10 +24,9 @@ class Values:
 
     COLORS = [(188, 213, 213), (77, 152, 189), (91, 124, 149)]      #BGR
 
-    VERTICAL_ANGLE = 60
+    VERTICAL_ANGLE = 62.2
 
-    HORIZONTAL_ANGLE = 50
-
+    HORIZONTAL_ANGLE = 48.8
 
 
 class Constants:

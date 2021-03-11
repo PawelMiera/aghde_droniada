@@ -8,6 +8,9 @@ class Detection:
         self.rectangle = rectangle
         self.shape = shape
         self.area = area
+        self.area_m = None
+        self.latitude = None
+        self.longitude = None
         self.color = color
         self.middle_point = mid
         self.points = points
@@ -24,6 +27,10 @@ class Detection:
                 color_distance = new_distance
 
         return color_id
+
+    def update_lat_lon(self, lat, lon):
+        self.latitude = lat
+        self.longitude = lon
 
     def get_area_meters(self):
         pass
@@ -60,11 +67,38 @@ class Detection:
                 label += "Square"
             elif self.shape == Values.CIRCLE:
                 label += "Circle"
+        labels = [label]
+        if self.latitude is not None and self.longitude is not None:
+            labels.append("Lat: " + '%.5f' %self.latitude)
+            labels.append("Lon: " + '%.5f' %self.longitude)
+        if self.area_m is not None:
+            labels.append("Area: " + '%.2f' %self.area_m)
 
-            labelSize, baseLine = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)
+        labelSizes_x = []
+        labelSizes_y = []
+        for l in labels:
+            labelSize, baseLine = cv2.getTextSize(l, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)
+            labelSizes_x.append(labelSize[0])
+            labelSizes_y.append(labelSize[1])
 
-            label_ymin = max(y, labelSize[1] + 10)
+        rect_y_min = y - (labelSize[1] + 10) * len(labels)
+        rect_y_min = max(0, rect_y_min)
 
-            cv2.rectangle(frame, (x, label_ymin - labelSize[1] - 10),
-                          (x + labelSize[0], label_ymin + baseLine - 10), (255, 255, 255), cv2.FILLED)
-            cv2.putText(frame, label, (x, label_ymin - 7), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2)
+        label_ymin = max(y, max(labelSizes_y) + 10, 0)
+
+        max_x = max(labelSizes_x)
+
+        cv2.rectangle(frame, (x, rect_y_min),
+                      (x + max_x, label_ymin + baseLine - 10), (255, 255, 255), cv2.FILLED)
+        for l in labels:
+            cv2.putText(frame, l, (x, rect_y_min + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+            rect_y_min += 20
+
+        """labelSize, baseLine = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)
+        label_ymin = max(y, labelSize[1] + 10)
+
+        cv2.rectangle(frame, (x, label_ymin - labelSize[1] - 10 * len(labels)),
+                      (x + labelSize[0], label_ymin + baseLine - 10), (255, 255, 255), cv2.FILLED)
+
+        cv2.putText(frame, label, (x, label_ymin - 7), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2)
+        """
