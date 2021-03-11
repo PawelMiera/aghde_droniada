@@ -44,7 +44,6 @@ class Detector(ImageProcessor):
 
     def detect(self, frame):
 
-        height, width = frame.shape[:2]
         contours = self.extract_contours(frame)
 
         detections = []
@@ -57,11 +56,6 @@ class Detector(ImageProcessor):
                 x, y, w, h = cv2.boundingRect(cnt)
 
                 a = int(w / 3)
-
-                rectangle = [x - Values.BOX_SIZE_INCREASE if x > Values.BOX_SIZE_INCREASE else x,
-                             y - Values.BOX_SIZE_INCREASE if y > Values.BOX_SIZE_INCREASE else y,
-                             w + 2 * Values.BOX_SIZE_INCREASE if w + 2 * Values.BOX_SIZE_INCREASE + x < width else w,
-                             h + 2 * Values.BOX_SIZE_INCREASE if h + 2 * Values.BOX_SIZE_INCREASE + y < height else h]
 
                 if shape != Values.TRIANGLE:
                     mid = (int(x + 0.5 * w), int(y + 0.5 * h))
@@ -77,7 +71,7 @@ class Detector(ImageProcessor):
 
                 color = (np.median(G), np.median(B), np.median(R))
 
-                detection = Detection(shape, rectangle, area, color, points, mid)
+                detection = Detection(shape, [x, y, w, h], area, color, points, mid)
                 detections.append(detection)
 
         return detections
