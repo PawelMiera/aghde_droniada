@@ -1,7 +1,7 @@
 from threading import Thread
 from settings.settings import Values
 from detector.detector import Detector
-from camera.camera import CameraVideo
+from camera.camera import Camera
 from telemetry.telemetry import Telemetry
 from positionCalculator.positionCalculator import PositionCalculator
 import cv2
@@ -12,12 +12,12 @@ class MainLoop(Thread):
 
     def __init__(self):
         Thread.__init__(self)
-        self.camera = CameraVideo()
+        self.camera = Camera()
         self.detector = Detector()
         self.stop_loop = False
         self.telemetry = Telemetry()
         self.position_calculator = PositionCalculator()
-        self.frame = cv2.imread("images/pole.png")
+        self.frame = None
 
     def run(self):
 
@@ -29,10 +29,10 @@ class MainLoop(Thread):
                 if self.stop_loop:
                     break
 
-                self.frame = cv2.imread("images/pole_new.jpg")
-                # self.frame = self.camera.get_frame()
+                #self.frame = cv2.imread("images/pole_new.jpg")
+                self.frame = self.camera.get_frame()
 
-                self.frame = cv2.resize(self.frame, (Values.CAMERA_WIDTH, Values.CAMERA_HEIGHT))
+                #self.frame = cv2.resize(self.frame, (Values.CAMERA_WIDTH, Values.CAMERA_HEIGHT))
                 if self.frame is None:
                     continue
 
@@ -63,6 +63,8 @@ class MainLoop(Thread):
 
             except Exception as e:
                 print("Some error accrued: ", str(e))
+        self.close()
 
     def close(self):
+        self.camera.close()
         self.stop_loop = True
