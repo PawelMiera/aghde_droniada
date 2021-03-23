@@ -15,10 +15,10 @@ class Camera:
                 return None
 
     def gstreamer_pipeline(self,
-                           capture_width=1280,
-                           capture_height=720,
-                           display_width=1280,
-                           display_height=720,
+                           capture_width=640,
+                           capture_height=480,
+                           display_width=640,
+                           display_height=480,
                            framerate=60,
                            flip_method=0,
                            ):
@@ -30,7 +30,7 @@ class Camera:
                 "nvvidconv flip-method=%d ! "
                 "video/x-raw, width=(int)%d, height=(int)%d, format=(string)BGRx ! "
                 "videoconvert ! "
-                "video/x-raw, format=(string)BGR ! appsink"
+                "video/x-raw, format=(string)BGR ! appsink max-buffers=1 drop=True"
                 % (
                     capture_width,
                     capture_height,
