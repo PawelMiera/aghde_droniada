@@ -60,3 +60,19 @@ class CameraVideo:
     def close(self):
         self.camera.release()
         cv2.destroyAllWindows()
+
+
+class BasicCamera:
+    def __init__(self):
+        self.camera = cv2.VideoCapture(0)
+
+    def get_frame(self):
+        ret, frame = self.camera.read()
+        if ret:
+            return frame
+        else:
+            return None
+
+    def close(self):
+        self.camera.release()
+        cv2.destroyAllWindows()
