@@ -14,9 +14,16 @@ class Detection:
         self.color = color
         self.middle_point = mid
         self.points = points
-        self.color_id = self.get_color_id()
+        self.color_id = np.argmax(self.color)
+        self.detection_id = None
+        self.to_delete = False
+        self.last_seen = 0
+        self.seen_times = 1
 
-    def get_color_id(self):
+    def update_color_id(self):
+        self.color_id = np.argmax(self.color)
+
+    def get_color_id(self):  # raczej do wywalenia :)
         color_distance = 1000
         color_id = None
         for i, col in enumerate(Values.COLORS):
@@ -35,12 +42,28 @@ class Detection:
     def get_area_meters(self):
         pass
 
+    def __add__(self, other):
+        self.color = np.add(other.color, self.color)
+        self.update_color_id()
+        self.seen_times += 1
+        self.area_m = (self.area_m * (self.seen_times - 1) + other.area_m) / self.seen_times
+        self.latitude = (self.latitude * (self.seen_times - 1) + other.latitude) / self.seen_times
+        self.longitude = (self.longitude * (self.seen_times - 1) + other.longitude) / self.seen_times
+        return self
+
+    def check_detection(self, new_det):
+
+        # mozna dodac sprawdzanie koloru
+        return self.shape == new_det.shape and abs(self.latitude - new_det.latitude) < Values.MAX_LONG_LAT_DIFF \
+               and abs(self.longitude - new_det.longitude) < Values.MAX_LONG_LAT_DIFF \
+               and abs(self.area_m - new_det.area_m) < Values.MAX_AREA_DIFF
+
     def draw_detection(self, frame):
         for p in self.points:
             cv2.circle(frame, p, 5, (0, 0, 255), -1)
 
         if self.middle_point is not None:
-            cv2.circle(frame, self.middle_point, 10, (0, 255, 0), -1)
+            cv2.circle(frame, tuple(self.middle_point), 10, (0, 255, 0), -1)
 
         if self.rectangle is not None:
             x, y, w, h = self.rectangle
@@ -69,10 +92,10 @@ class Detection:
                 label += "Circle"
         labels = [label]
         if self.latitude is not None and self.longitude is not None:
-            labels.append("Lat: " + '%.5f' %self.latitude)
-            labels.append("Lon: " + '%.5f' %self.longitude)
+            labels.append("Lat: " + '%.5f' % self.latitude)
+            labels.append("Lon: " + '%.5f' % self.longitude)
         if self.area_m is not None:
-            labels.append("Area: " + '%.2f' %self.area_m)
+            labels.append("Area: " + '%.2f' % self.area_m)
 
         labelSizes_x = []
         labelSizes_y = []

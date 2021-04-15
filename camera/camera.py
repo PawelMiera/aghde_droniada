@@ -64,7 +64,9 @@ class CameraVideo:
 
 class BasicCamera:
     def __init__(self):
-        self.camera = cv2.VideoCapture(0)
+        self.camera = cv2.VideoCapture(1)
+        self.camera.set(3, 1280)
+        self.camera.set(4, 720)
 
     def get_frame(self):
         ret, frame = self.camera.read()

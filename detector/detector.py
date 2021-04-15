@@ -4,41 +4,42 @@ from detector.image_processor import ImageProcessor
 from detector.detections.detections import Detection
 from settings.settings import Values
 from scipy.spatial import distance
+import time
 
 
 class Detector(ImageProcessor):
 
     def __init__(self):
-        pass
+        self.brown_low = (161, 26, 128)
+        self.brown_high = (203, 73, 225)
+
+        self.brown_low_2 = (0, 36, 128)
+        self.brown_high_2 = (9, 75, 138)
+
+        self.white_low = (65, 0, 230)
+        self.white_high = (178, 81, 255)
+
+        self.orange_low = (10, 35, 155)
+        self.orange_high = (57, 114, 255)
 
     def extract_contours(self, image: np.array) -> np.array:
         hsv = self.to_hsv(image)
 
-        hsv_brown_low = np.uint8([0, 35, 137])
-        hsv_brown_high = np.uint8([37, 255, 255])
+        mask_brown = cv2.inRange(hsv, self.brown_low, self.brown_high)
+        mask_brown_2 = cv2.inRange(hsv, self.brown_low_2, self.brown_high_2)
+        mask_white = cv2.inRange(hsv, self.white_low, self.white_high)
+        mask_orange = cv2.inRange(hsv, self.orange_low, self.orange_high)
 
-        hsv_white_low = np.uint8([49, 16, 148])
-        hsv_white_high = np.uint8([102, 125, 215])
+        #size = 3
+        #kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (size, size))  # TO TEZ OUT
 
-        hsv_white2_low = np.uint8([0, 0, 200])
-        hsv_white2_high = np.uint8([255, 255, 255])
+        cnt_white = self.find_contours(mask_white)
+        cnt_orange = self.find_contours(mask_orange)
+        cnt_brown = self.find_contours(mask_brown + mask_brown_2)
 
-        mask1 = cv2.inRange(hsv, hsv_brown_low, hsv_brown_high)
-        mask2 = cv2.inRange(hsv, hsv_white_low, hsv_white_high)
-        mask3 = cv2.inRange(hsv, hsv_white2_low, hsv_white2_high)
+        contours_all_masks = [cnt_white, cnt_orange, cnt_brown]
 
-        size = 3
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (size, size))
-        masks = [mask1, mask2, mask3]
-
-        contours_all_masks = []
-
-        for mask in masks:
-            post_process = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
-            contours = self.find_contours(post_process)
-            [contours_all_masks.append(c) for c in contours]
-
-        contours_all_masks = self.filter_contours_by_area(contours_all_masks)
+        #cv2.imshow("mask", mask_white + mask_orange + mask_brown + mask_brown_2)
 
         return contours_all_masks
 
@@ -48,7 +49,34 @@ class Detector(ImageProcessor):
 
         detections = []
 
-        for cnt in contours:
+        for c in range(len(contours)):
+            for cnt in contours[c]:
+
+                area = cv2.contourArea(cnt)
+                if area > Values.MIN_AREA:
+                    shape, points = self.get_contour_shape(cnt)
+
+                    #img = frame.copy()
+                    #cv2.drawContours(img, [cnt], 0, (0,255,0), 3)
+
+                    if shape is not None:
+                        x, y, w, h = cv2.boundingRect(cnt)
+
+                        if shape != Values.TRIANGLE:
+                            mid = [int(x + 0.5 * w), int(y + 0.5 * h)]
+                        else:
+                            mid = np.mean(points, axis=0, dtype=np.int)
+
+                        area = cv2.contourArea(cnt)
+
+                        detection_color = [0, 0, 0]
+                        detection_color[c] += 1
+
+                        detection = Detection(shape, [x, y, w, h], area, detection_color, points, mid)
+                        detections.append(detection)
+
+
+        """for cnt in contours:
 
             shape, points = self.get_contour_shape(cnt)
 
@@ -72,7 +100,7 @@ class Detector(ImageProcessor):
                 color = (np.median(G), np.median(B), np.median(R))
 
                 detection = Detection(shape, [x, y, w, h], area, color, points, mid)
-                detections.append(detection)
+                detections.append(detection)"""
 
         return detections
 
@@ -80,7 +108,7 @@ class Detector(ImageProcessor):
 
         shape = None
         peri = cv2.arcLength(contour, True)
-        approx = cv2.approxPolyDP(contour, 0.04 * peri, True)
+        approx = cv2.approxPolyDP(contour, 0.02 * peri, True)
         length = len(approx)
         points = []
 
@@ -128,7 +156,7 @@ class Detector(ImageProcessor):
                 if not wrong_size:
                     shape = Values.SQUARE
 
-            elif 7 < length < 23:
+            elif 7 <= length < 23:
                 shape = Values.CIRCLE
 
         return shape, points

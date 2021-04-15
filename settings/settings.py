@@ -3,14 +3,17 @@ class Values:
 
     WRITE_TO_FILE = True
 
+    MAX_AREA_DIFF = 0.5
+    MAX_LONG_LAT_DIFF = 0.00004
     MIN_AREA = 400
+
     BOX_COLOR = (0, 0, 255)
     BOX_SIZE_INCREASE = 10
 
     CAMERA = 0
 
-    CAMERA_WIDTH = 820
-    CAMERA_HEIGHT = 616
+    CAMERA_WIDTH = 1280
+    CAMERA_HEIGHT = 720
 
     MAX_PIXEL_AREA = CAMERA_WIDTH * CAMERA_HEIGHT
 
@@ -29,10 +32,3 @@ class Values:
     HORIZONTAL_ANGLE = 48.8
 
 
-class Constants:
-    RD = 3
-    RU = 0
-    LD = 4
-    LU = 1
-    CORNERS = 1
-    GATE = 0

@@ -19,7 +19,7 @@ class ImageProcessor:
 
     @staticmethod
     def find_contours(image: np.array):
-        cts, h = cv2.findContours(image, cv2.RETR_EXTERNAL,
+        cts, h = cv2.findContours(image, cv2.RETR_LIST,
                                   cv2.CHAIN_APPROX_SIMPLE)
         return cts
 
