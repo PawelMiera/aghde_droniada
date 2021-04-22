@@ -5,7 +5,7 @@ class Values:
 
     MAX_AREA_DIFF = 0.5
     MAX_LONG_LAT_DIFF = 0.00004
-    MIN_AREA = 400
+    MIN_AREA = 800
 
     BOX_COLOR = (0, 0, 255)
     BOX_SIZE_INCREASE = 10
@@ -30,5 +30,7 @@ class Values:
     VERTICAL_ANGLE = 62.2
 
     HORIZONTAL_ANGLE = 48.8
+
+    IMAGES_PATH = "saved_detections_images"
 
 

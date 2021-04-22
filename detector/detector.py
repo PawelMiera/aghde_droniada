@@ -39,7 +39,7 @@ class Detector(ImageProcessor):
 
         contours_all_masks = [cnt_white, cnt_orange, cnt_brown]
 
-        #cv2.imshow("mask", mask_white + mask_orange + mask_brown + mask_brown_2)
+        cv2.imshow("mask", mask_white + mask_orange + mask_brown + mask_brown_2)
 
         return contours_all_masks
 
@@ -54,16 +54,14 @@ class Detector(ImageProcessor):
 
                 area = cv2.contourArea(cnt)
                 if area > Values.MIN_AREA:
-                    shape, points = self.get_contour_shape(cnt)
-
-                    #img = frame.copy()
-                    #cv2.drawContours(img, [cnt], 0, (0,255,0), 3)
+                    bb = cv2.boundingRect(cnt)
+                    shape, points = self.get_contour_shape(cnt, frame, bb)
 
                     if shape is not None:
-                        x, y, w, h = cv2.boundingRect(cnt)
+
 
                         if shape != Values.TRIANGLE:
-                            mid = [int(x + 0.5 * w), int(y + 0.5 * h)]
+                            mid = [int(bb[0] + 0.5 * bb[2]), int(bb[1] + 0.5 * bb[2])]
                         else:
                             mid = np.mean(points, axis=0, dtype=np.int)
 
@@ -72,43 +70,16 @@ class Detector(ImageProcessor):
                         detection_color = [0, 0, 0]
                         detection_color[c] += 1
 
-                        detection = Detection(shape, [x, y, w, h], area, detection_color, points, mid)
+                        detection = Detection(shape, bb, area, detection_color, points, mid)
                         detections.append(detection)
-
-
-        """for cnt in contours:
-
-            shape, points = self.get_contour_shape(cnt)
-
-            if shape is not None:
-                x, y, w, h = cv2.boundingRect(cnt)
-
-                a = int(w / 3)
-
-                if shape != Values.TRIANGLE:
-                    mid = (int(x + 0.5 * w), int(y + 0.5 * h))
-                else:
-                    mid = tuple(np.mean(points, axis=0, dtype=np.int))
-                area = cv2.contourArea(cnt)
-
-                frame_cut = frame[int(mid[1] - a / 2):int(mid[1] + a / 2), int(mid[0] - a / 2):int(mid[0] + a / 2)]
-
-                G = frame_cut[:, :, 0]
-                B = frame_cut[:, :, 1]
-                R = frame_cut[:, :, 2]
-
-                color = (np.median(G), np.median(B), np.median(R))
-
-                detection = Detection(shape, [x, y, w, h], area, color, points, mid)
-                detections.append(detection)"""
 
         return detections
 
-    def get_contour_shape(self, contour):
+    def get_contour_shape(self, contour, frame, bb):
 
         shape = None
-        peri = cv2.arcLength(contour, True)
-        approx = cv2.approxPolyDP(contour, 0.02 * peri, True)
+        my_arclength = cv2.arcLength(contour, True)
+        approx = cv2.approxPolyDP(contour, 0.02 * my_arclength, True)
         length = len(approx)
         points = []
 
@@ -123,11 +94,11 @@ class Detector(ImageProcessor):
 
                 my_mean = np.mean(distances)
 
-                wrong_size = False
+                differences = np.abs(np.subtract(distances, my_mean))
 
-                for ele in distances:
-                    if abs(ele - my_mean) > 0.1 * my_mean:
-                        wrong_size = True
+                sizes_check = np.greater(differences, 0.1 * my_mean)
+
+                wrong_size = np.any(sizes_check)
 
                 if not wrong_size:
                     shape = Values.TRIANGLE
@@ -147,16 +118,45 @@ class Detector(ImageProcessor):
 
                 my_mean = np.mean(first_four)
 
-                wrong_size = False
+                differences = np.abs(np.subtract(first_four, my_mean))
 
-                for ele in first_four:
-                    if abs(ele - my_mean) > 0.1 * my_mean:
-                        wrong_size = True
+                sizes_check = np.greater(differences, 0.1 * my_mean)
+
+                wrong_size = np.any(sizes_check)
 
                 if not wrong_size:
                     shape = Values.SQUARE
 
-            elif 7 <= length < 23:
-                shape = Values.CIRCLE
+            elif length >= 6:
 
+                diff = int(bb[3] / 10)
+
+                crop_coordinates_y = [bb[1] - diff, bb[1] + bb[3] + diff]
+                crop_coordinates_x = [bb[0] - diff, bb[0] + bb[2] + diff]
+
+                crop_coordinates_y = np.maximum(crop_coordinates_y, 0)
+                crop_coordinates_x = np.maximum(crop_coordinates_x, 0)
+                crop_coordinates_y = np.minimum(crop_coordinates_y, Values.CAMERA_HEIGHT)
+                crop_coordinates_x = np.minimum(crop_coordinates_x, Values.CAMERA_WIDTH)
+
+                crop = frame[crop_coordinates_y[0]:crop_coordinates_y[1], crop_coordinates_x[0]:crop_coordinates_x[1]]
+                crop = cv2.resize(crop, (100, 100))
+                crop = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
+
+                circles = cv2.HoughCircles(crop, cv2.HOUGH_GRADIENT, 1, 50,
+                                           param1=20, param2=27, minRadius=40, maxRadius=55)
+                if circles is not None:
+                    shape = Values.CIRCLE
+
+                    """draw_crop = cv2.cvtColor(crop, cv2.COLOR_GRAY2BGR)
+                    circles = np.uint16(np.around(circles))
+                    for i in circles[0, :]:
+                        center = (i[0], i[1])
+
+                        cv2.circle(draw_crop, center, 1, (0, 100, 100), 3)
+
+                        radius = i[2]
+                        cv2.circle(draw_crop, center, radius, (255, 0, 255), 3)
+
+                        cv2.imshow("draw crop", draw_crop)"""
         return shape, points

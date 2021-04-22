@@ -26,7 +26,7 @@ class ImageProcessor:
     @staticmethod
     def draw_contours(image: np.array, contours: np.array):
         image = cv2.drawContours(image, contours, -1,
-                                 (0xaa, 0x77, 0x77), thickness=3)
+                                 (0, 0, 255), thickness=3)
         return image
 
     @staticmethod

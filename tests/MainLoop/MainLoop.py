@@ -27,7 +27,7 @@ class MainLoop(Thread):
 
         self.masks = []
 
-        self.id = 1
+        self.id = 820
 
         self.show_current = True
 
@@ -67,7 +67,7 @@ class MainLoop(Thread):
             if self.stop_loop:
                 break
 
-            path = "tests/to train/" + str(self.id) + ".jpg"
+            path = "tests/to_train2/" + str(self.id) + ".png"
             self.frame = cv2.imread(path)
 
             if self.frame is None:

@@ -25,7 +25,7 @@ class MainLoop(Thread):
 
     def run(self):
 
-        self.id = 0
+        self.id = 1
 
         time_index = 0
 
@@ -39,7 +39,7 @@ class MainLoop(Thread):
 
                 path = "tests/to train/" + str(self.id) + ".jpg"
 
-                self.frame = cv2.imread(path)
+                self.frame = cv2.imread("images/" + str(self.id) + ".jpg")
                 # self.frame = self.camera.get_frame()
 
                 if self.frame is None:
@@ -56,7 +56,7 @@ class MainLoop(Thread):
                     lat, lon = self.position_calculator.calculate_point_lat_long(d.middle_point)
                     d.update_lat_lon(lat, lon)
                     d.area_m = self.position_calculator.calculate_area_in_meters_2(d.area)
-
+                    d.draw_detection(self.frame)
                     for conf_d in self.confirmed_detections:
                         if d.check_detection(conf_d):
                             conf_d += d
@@ -72,7 +72,6 @@ class MainLoop(Thread):
                             all_d.last_seen = time_index
                             d.to_delete = True
                             break
-                    d.draw_detection(self.frame)
 
                 for d in detections:
                     if not d.to_delete:
@@ -83,19 +82,19 @@ class MainLoop(Thread):
                         self.confirmed_detections.append(all_d)
                         all_d.to_delete = True
                     elif all_d.seen_times > 4:
-                        if time_index - all_d.last_seen > 200:
+                        if time_index - all_d.last_seen > 800:
                             all_d.to_delete = True
                     else:
-                        if time_index - all_d.last_seen > 10:
+                        if time_index - all_d.last_seen > 20:
                             all_d.to_delete = True
 
-                self.all_detections = list(filter(lambda x: not x.to_delete, self.all_detections))          # do sprawdzenia
+                self.all_detections = list(filter(lambda x: not x.to_delete, self.all_detections))  # do sprawdzenia
 
                 cv2.imshow("frame", self.frame)
 
                 time_index += 1
-                # self.id += 1
-                if cv2.waitKey(1) & 0xFF == ord('q'):
+                self.id += 1
+                if cv2.waitKey(0) & 0xFF == ord('q'):
                     break
 
                 if Values.PRINT_FPS:
