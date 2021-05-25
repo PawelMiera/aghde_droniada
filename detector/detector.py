@@ -3,43 +3,67 @@ import numpy as np
 from detector.image_processor import ImageProcessor
 from detector.detections.detections import Detection
 from settings.settings import Values
-from scipy.spatial import distance
-import time
 
 
 class Detector(ImageProcessor):
 
     def __init__(self):
-        self.brown_low = (161, 26, 128)
-        self.brown_high = (203, 73, 225)
 
-        self.brown_low_2 = (0, 36, 128)
-        self.brown_high_2 = (9, 75, 138)
+        # nowy
+        #(0, 0, 68), (203, 167, 161)
 
-        self.white_low = (65, 0, 230)
-        self.white_high = (178, 81, 255)
+        if Values.WEATHER_MODE == 0:
+            self.brown_low = (0, 73, 141)
+            self.brown_high = (18, 165, 209)
 
-        self.orange_low = (10, 35, 155)
-        self.orange_high = (57, 114, 255)
+            self.orange_low = (13, 109, 217)
+            self.orange_high = (29, 187, 255)
+
+            self.white_low = (0, 0, 235)
+            self.white_high = (168, 43, 255)
+
+        elif Values.WEATHER_MODE == 1:
+            self.brown_low = (161, 26, 128)
+            self.brown_high = (203, 73, 225)
+
+            self.brown_low_2 = (0, 36, 128)
+            self.brown_high_2 = (9, 75, 138)
+
+            self.white_low = (65, 0, 230)
+            self.white_high = (178, 81, 255)
+
+            self.orange_low = (10, 35, 155)
+            self.orange_high = (57, 114, 255)
+
+        elif Values.WEATHER_MODE == 2:
+            self.brown_low = (0, 0, 68)
+            self.brown_high = (203, 167, 209)
+
+            self.orange_low = (0, 109, 160)
+            self.orange_high = (60, 231, 255)
+
+            self.white_low = (0, 0, 178)
+            self.white_high = (168, 61, 255)
+
 
     def extract_contours(self, image: np.array) -> np.array:
         hsv = self.to_hsv(image)
 
         mask_brown = cv2.inRange(hsv, self.brown_low, self.brown_high)
-        mask_brown_2 = cv2.inRange(hsv, self.brown_low_2, self.brown_high_2)
+        #mask_brown_2 = cv2.inRange(hsv, self.brown_low_2, self.brown_high_2)
         mask_white = cv2.inRange(hsv, self.white_low, self.white_high)
         mask_orange = cv2.inRange(hsv, self.orange_low, self.orange_high)
 
-        #size = 3
-        #kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (size, size))  # TO TEZ OUT
+        # size = 3
+        # kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (size, size))  # TO TEZ OUT
 
         cnt_white = self.find_contours(mask_white)
         cnt_orange = self.find_contours(mask_orange)
-        cnt_brown = self.find_contours(mask_brown + mask_brown_2)
+        cnt_brown = self.find_contours(mask_brown)     # + mask_brown_2
 
         contours_all_masks = [cnt_white, cnt_orange, cnt_brown]
 
-        cv2.imshow("mask", mask_white + mask_orange + mask_brown + mask_brown_2)
+        #cv2.imshow("mask", mask_white + mask_orange + mask_brown )
 
         return contours_all_masks
 
@@ -59,13 +83,10 @@ class Detector(ImageProcessor):
 
                     if shape is not None:
 
-
                         if shape != Values.TRIANGLE:
                             mid = [int(bb[0] + 0.5 * bb[2]), int(bb[1] + 0.5 * bb[2])]
                         else:
                             mid = np.mean(points, axis=0, dtype=np.int)
-
-                        area = cv2.contourArea(cnt)
 
                         detection_color = [0, 0, 0]
                         detection_color[c] += 1
@@ -89,8 +110,8 @@ class Detector(ImageProcessor):
                 for i in range(length):
                     points.append((approx[i][0][0], approx[i][0][1]))
 
-                distances = [distance.euclidean(points[0], points[1]), distance.euclidean(points[0], points[2]),
-                             distance.euclidean(points[1], points[2])]
+                distances = [self.my_distance(points[0], points[1]), self.my_distance(points[0], points[2]),
+                             self.my_distance(points[1], points[2])]
 
                 my_mean = np.mean(distances)
 
@@ -108,9 +129,9 @@ class Detector(ImageProcessor):
                 for i in range(length):
                     points.append((approx[i][0][0], approx[i][0][1]))
 
-                distances = [distance.euclidean(points[0], points[1]), distance.euclidean(points[0], points[2]),
-                             distance.euclidean(points[0], points[3]), distance.euclidean(points[1], points[2]),
-                             distance.euclidean(points[1], points[3]), distance.euclidean(points[2], points[3])]
+                distances = [self.my_distance(points[0], points[1]), self.my_distance(points[0], points[2]),
+                             self.my_distance(points[0], points[3]), self.my_distance(points[1], points[2]),
+                             self.my_distance(points[1], points[3]), self.my_distance(points[2], points[3])]
 
                 distances.sort()
 
@@ -148,15 +169,8 @@ class Detector(ImageProcessor):
                 if circles is not None:
                     shape = Values.CIRCLE
 
-                    """draw_crop = cv2.cvtColor(crop, cv2.COLOR_GRAY2BGR)
-                    circles = np.uint16(np.around(circles))
-                    for i in circles[0, :]:
-                        center = (i[0], i[1])
-
-                        cv2.circle(draw_crop, center, 1, (0, 100, 100), 3)
-
-                        radius = i[2]
-                        cv2.circle(draw_crop, center, radius, (255, 0, 255), 3)
-
-                        cv2.imshow("draw crop", draw_crop)"""
         return shape, points
+
+    def my_distance(self, v, u):
+        s = ((v[0]-u[0]) ** 2) + ((v[1]-u[1]) ** 2)
+        return s ** 0.5

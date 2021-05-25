@@ -1,10 +1,21 @@
+import threading
+from tcpServer.tcpServer import *
 
-class Telemetry:
+
+class TelemetryThread:
     def __init__(self):
-        self.longitude = None
-        self.latitude = None
-        self.altitude = None
-        self.azimuth = None
+        self.longitude = 0
+        self.latitude = 0
+        self.altitude = 0
+        self.azimuth = 0
+
+        self.server = EchoServer('127.0.0.1', 6969, self)
+        self.thread = threading.Thread(target=self.start_thread)
+        self.thread.daemon = True
+        self.thread.start()
+
+    def start_thread(self):
+        asyncore.loop()
 
     def update_telemetry(self, data):
         self.latitude = float(data[0])
@@ -22,6 +33,8 @@ class Telemetry:
         self.latitude = latitude
         self.altitude = altitude
         self.azimuth = azimuth
+
+
 
     def to_string(self):
         return "{:.7f},{:.7f}".format(self.latitude, self.longitude) + "," + str(self.altitude) + "," + str(self.azimuth)

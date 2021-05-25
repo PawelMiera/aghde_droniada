@@ -2,12 +2,12 @@ import numpy as np
 from settings.settings import Values
 from geographiclib.geodesic import Geodesic
 import cv2
-from telemetry.telemetry import Telemetry
+
 
 
 class PositionCalculator:
 
-    def __init__(self, telemetry: Telemetry):
+    def __init__(self, telemetry):
         self.vertical_constant = self.calculate_vertical_constant()
         self.horizontal_constant = self.calculate_horizontal_constant()
         self.meters_per_pixel_vertical = None
@@ -27,13 +27,14 @@ class PositionCalculator:
         self.distance_vertical_geo = None
         self.distance_horizontal_geo = None
         self.telemetry = telemetry
+        self.b = np.rad2deg(np.math.atan(Values.CAMERA_WIDTH / Values.CAMERA_HEIGHT))
 
     def calculate_vertical_constant(self):
-        vertical_constant = 2 * np.math.tan(np.deg2rad(Values.VERTICAL_ANGLE / 2)) / Values.CAMERA_WIDTH
+        vertical_constant = 2 * np.math.tan(np.deg2rad(Values.VERTICAL_ANGLE / 2)) / Values.CAMERA_HEIGHT
         return vertical_constant
 
     def calculate_horizontal_constant(self):
-        horizontal_constant = 2 * np.math.tan(np.deg2rad(Values.HORIZONTAL_ANGLE / 2)) / Values.CAMERA_HEIGHT
+        horizontal_constant = 2 * np.math.tan(np.deg2rad(Values.HORIZONTAL_ANGLE / 2)) / Values.CAMERA_WIDTH
         return horizontal_constant
 
     def update_meters_per_pixel(self):
@@ -48,15 +49,15 @@ class PositionCalculator:
 
     def calculate_max_meters_horizontal(self):
         """
-        Need to run calculate_meters_per_pixel_horizontal() first!!!
+        Need to run update_meters_per_pixel() first!!!
         """
-        self.max_meters_horizontal = self.meters_per_pixel_horizontal * Values.CAMERA_HEIGHT
+        self.max_meters_horizontal = self.meters_per_pixel_horizontal * Values.CAMERA_WIDTH
 
     def calculate_max_meters_vertical(self):
         """
-        Need to run calculate_meters_per_pixel_horizontal() first!!!
+        Need to run update_meters_per_pixel() first!!!
         """
-        self.max_meters_vertical = self.meters_per_pixel_vertical * Values.CAMERA_WIDTH
+        self.max_meters_vertical = self.meters_per_pixel_vertical * Values.CAMERA_HEIGHT
 
     def calculate_max_meters_area(self):
         """
@@ -66,47 +67,42 @@ class PositionCalculator:
         self.calculate_max_meters_horizontal()
         self.max_meters_area = self.max_meters_vertical * self.max_meters_horizontal
 
-    def calculate_extreme_points(self, latitude, longitude, azimuth):
+    def calculate_extreme_points(self):
         """
         Need to run calculate_max_meters_horizontal() and calculate_max_meters_vertical() first!!!
         """
-        distance = np.sqrt(((self.max_meters_horizontal / 2) ** 2) + ((self.max_meters_vertical / 2) ** 2))
-        b = np.rad2deg(np.math.atan(Values.CAMERA_WIDTH / Values.CAMERA_HEIGHT))
+        distance = (((self.max_meters_horizontal / 2) ** 2) + ((self.max_meters_vertical / 2) ** 2)) ** 0.5
 
-        a1 = azimuth - b
-        a2 = azimuth - 180 + b
-        a3 = azimuth + b
-        a4 = azimuth + 180 - b
+        a1 = self.telemetry.azimuth - self.b
+        a2 = self.telemetry.azimuth - 180 + self.b
+        a3 = self.telemetry.azimuth + self.b
+        a4 = self.telemetry.azimuth + 180 - self.b
 
-        print("{:.8f},{:.8f}".format(latitude, longitude))
+        #print("{:.8f},{:.8f}".format(self.telemetry.latitude, self.telemetry.longitude))
 
-        g = self.geod.Direct(latitude, longitude, a1, distance)
+        g = self.geod.Direct(self.telemetry.latitude, self.telemetry.longitude, a1, distance)
         self.point_lu = [g['lat2'], g['lon2']]
-        print("{:.8f},{:.8f}".format(g['lat2'], g['lon2']))
+        #print("{:.8f},{:.8f}".format(g['lat2'], g['lon2']))
 
-        g = self.geod.Direct(latitude, longitude, a2, distance)
+        g = self.geod.Direct(self.telemetry.latitude, self.telemetry.longitude, a2, distance)
         self.point_ld = [g['lat2'], g['lon2']]
-        print("{:.8f},{:.8f}".format(g['lat2'], g['lon2']))
+        #print("{:.8f},{:.8f}".format(g['lat2'], g['lon2']))
 
-        g = self.geod.Direct(latitude, longitude, a3, distance)
+        g = self.geod.Direct(self.telemetry.latitude, self.telemetry.longitude, a3, distance)
         self.point_ru = [g['lat2'], g['lon2']]
-        print("{:.8f},{:.8f}".format(g['lat2'], g['lon2']))
+        #print("{:.8f},{:.8f}".format(g['lat2'], g['lon2']))
 
-        g = self.geod.Direct(latitude, longitude, a4, distance)
+        g = self.geod.Direct(self.telemetry.latitude, self.telemetry.longitude, a4, distance)
         self.point_rd = [g['lat2'], g['lon2']]
-        print("{:.8f},{:.8f}".format(g['lat2'], g['lon2']))
+        #print("{:.8f},{:.8f}".format(g['lat2'], g['lon2']))
 
         self.line_u = self.get_line_factors(self.point_lu, self.point_ru)
         self.line_d = self.get_line_factors(self.point_ld, self.point_rd)
         self.line_l = self.get_line_factors(self.point_lu, self.point_ld)
         self.line_r = self.get_line_factors(self.point_ru, self.point_rd)
 
-        """print(str(l1[0]) + "*x + " + str(l1[1]) + "*y +" + str(l1[2]) + "= 0")
-        print(str(l2[0]) + "*x + " + str(l2[1]) + "*y +" + str(l2[2]) + "= 0")
-        print(str(l3[0]) + "*x + " + str(l3[1]) + "*y +" + str(l3[2]) + "= 0")
-        print(str(l4[0]) + "*x + " + str(l4[1]) + "*y +" + str(l4[2]) + "= 0")"""
-        self.distance_vertical_geo = self.calculate_point_to_line_distance(self.point_lu, self.line_r)
-        self.distance_horizontal_geo = self.calculate_point_to_line_distance(self.point_lu, self.line_d)
+        self.distance_vertical_geo = self.calculate_point_to_line_distance(self.point_lu, self.line_d)
+        self.distance_horizontal_geo = self.calculate_point_to_line_distance(self.point_lu, self.line_r)
 
     def get_detection_on_image_cords(self, lat, long):
         """
@@ -121,18 +117,18 @@ class PositionCalculator:
         h = self.distance_horizontal_geo
         v = self.distance_vertical_geo
 
-        if du <= h and dd <= h and dl <= v and dr <= v:
-            x = dl / v
-            y = du / h
+        if du <= v and dd <= v and dl <= h and dr <= h:
+            x = dl / h
+            y = du / v
             x *= Values.CAMERA_WIDTH
             y *= Values.CAMERA_HEIGHT
             return int(x), int(y)
         else:
             return None
 
-    def calculate_point_to_line_distance(self, p, l):
-        distance = abs(l[0] * p[0] + l[1] * p[1] + l[2])
-        distance /= np.sqrt((l[0] ** 2) + (l[1] ** 2))
+    def calculate_point_to_line_distance(self, point, line):
+        distance = abs(line[0] * point[0] + line[1] * point[1] + line[2])
+        distance /= ((line[0] ** 2) + (line[1] ** 2)) ** 0.5
         return distance
 
     def get_line_factors(self, p1, p2):
@@ -144,20 +140,21 @@ class PositionCalculator:
     def calculate_point_lat_long(self, point):
 
         p = point.copy()
-        p[0] -= Values.CAMERA_WIDTH / 2
-        p[1] = Values.CAMERA_HEIGHT / 2 - p[1]
+        p[0] -= Values.CAMERA_WIDTH_HALF
+        p[1] = Values.CAMERA_HEIGHT_HALF - p[1]
 
         angle = np.rad2deg(np.math.atan2(p[0], p[1]))
 
         end_angle = self.telemetry.azimuth + angle
 
-        p[0] *= self.meters_per_pixel_vertical
-        p[1] *= self.meters_per_pixel_horizontal
+        p[0] *= self.meters_per_pixel_horizontal
+        p[1] *= self.meters_per_pixel_vertical
 
-        distance = np.sqrt(np.sum(np.square(p)))
+        distance = ((p[0] ** 2) + (p[1] ** 2)) ** 0.5
 
         g = self.geod.Direct(self.telemetry.latitude, self.telemetry.longitude, end_angle, distance)
 
+        #print("point {:.8f},{:.8f}".format(g['lat2'], g['lon2']))
         return g['lat2'], g['lon2']
 
     def transfrom_point_by_angle(self, x, y, azimuth_radians):

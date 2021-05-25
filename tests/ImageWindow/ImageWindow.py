@@ -3,6 +3,8 @@ from PyQt5.QtCore import pyqtSlot, QTimer
 from PyQt5.QtWidgets import QMainWindow, QLabel, QSlider, QGroupBox, QVBoxLayout, QLineEdit
 from PyQt5.QtWidgets import QWidget, QGridLayout, QPushButton
 from PyQt5.QtCore import Qt
+from PyQt5.uic.properties import QtCore
+
 
 class ImageWindow(QMainWindow):
 
@@ -66,6 +68,7 @@ class ImageWindow(QMainWindow):
         self.ver_layout.addWidget(self.masksInfo)
         self.ver_layout.addWidget(self.masksLabel)
 
+
         self.sliders = []
         for i in range(6):
             s = QSlider(Qt.Horizontal)
@@ -93,6 +96,9 @@ class ImageWindow(QMainWindow):
 
         self.central_widget.setLayout(self.ver_layout)
         self.setCentralWidget(self.central_widget)
+
+
+
 
     def valuechange(self):
         h_min = self.sliders[0].value()
@@ -171,13 +177,10 @@ class ImageWindow(QMainWindow):
         self.main_loop.close()
 
     def keyPressEvent(self, event):
-        if event.key() == 16777220:
-            self.pid_start()
-        elif event.key() == 16777216:
-            self.pid_stop()
-        elif event.key() == 16777264:
-            self.on_click_slow_land()
-        elif event.key() == 16777265:
-            self.on_click_go()
-        #print(event.key())
+
+        if event.key() == 78:
+            self.main_loop.id += 1
+
+        if event.key() == 66:
+            self.main_loop.id -= 1
 
