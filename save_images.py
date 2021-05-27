@@ -1,5 +1,5 @@
 from camera.camera import Camera
-from camera.camera import BasicCamera
+from camera.camera import BasicCamera2
 import cv2
 import os
 from datetime import datetime
@@ -7,7 +7,7 @@ import time
 
 now = datetime.now()
 
-camera = BasicCamera()
+camera = BasicCamera2()
 folder = os.path.join("images", str(now.strftime("%H_%M_%S")))
 print(folder)
 try:

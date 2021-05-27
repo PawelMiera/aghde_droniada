@@ -27,7 +27,7 @@ class MainLoop(Thread):
 
         self.masks = []
 
-        self.id = 320
+        self.id = 200
 
         self.show_current = True
 
@@ -69,9 +69,9 @@ class MainLoop(Thread):
 
             path = "tests/to_train2/" + str(self.id) + ".png"
 
-            path = "C:/Users/Pawel/Desktop/0/images/"
+            path = 'D:/mission_images/2021_05_27_09_49_31/'
 
-            self.frame = cv2.imread(path + str(self.id) + ".jpg")
+            self.frame = cv2.imread(path + "images/" + str(self.id) + ".png")
 
             if self.frame is None:
                 continue

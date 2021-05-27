@@ -1,6 +1,6 @@
 from settings.settings import Values
 from detector.detector import Detector
-from camera.camera import BasicCamera, Camera, BasicCamera2
+from camera.camera import Camera, BasicCamera2
 from telemetryThread.telemetry import TelemetryThread
 from telemetry.telemetry import Telemetry
 from positionCalculator.positionCalculator import PositionCalculator
@@ -41,9 +41,9 @@ def mode_0():
     detections_file = open(save_directory + "/detections.txt", "w")
 
     time_index = 0
-    id = 1820
+    id = 150
 
-    base_path = 'C:/Users/Pawel/Desktop/0/'
+    base_path = 'D:/mission_images/2021_05_27_09_49_31/'
 
     with open(base_path + 'telemetry.txt') as f:
         reader = csv.reader(f)
@@ -55,9 +55,7 @@ def mode_0():
     while True:
         try:
 
-            # path = "images/" + str(1) + ".jpg"
-            # path = "images/a" + str(self.id) + ".jpg"
-            path = base_path + "images/" + str(id) + ".jpg"
+            path = base_path + "images/" + str(id) + ".png"
 
             frame = cv2.imread(path)
             # self.frame = self.camera.get_frame()
@@ -71,8 +69,6 @@ def mode_0():
 
             detections = detector.detect(frame)
             telemetry.update_telemetry(data[id])
-
-            #telemetry.to_string()
 
             position_calculator.update_meters_per_pixel()
             position_calculator.calculate_max_meters_area()
@@ -122,7 +118,7 @@ def mode_0():
                     if time_index - all_d.last_seen > 20:
                         all_d.to_delete = True
 
-            all_detections = list(filter(lambda x: not x.to_delete, all_detections))  # do sprawdzenia
+            all_detections = list(filter(lambda x: not x.to_delete, all_detections))
 
             detections_file_text = "///////////////////////\n"
 
@@ -161,7 +157,7 @@ def mode_0():
 
 
 def mode_1():
-    camera = BasicCamera()
+    camera = BasicCamera2()
     telemetry = TelemetryThread()
     position_calculator = PositionCalculator(telemetry)  # do wywalenia
     img_id = 0
@@ -178,7 +174,6 @@ def mode_1():
 
             if telemetry.altitude > Values.MIN_ALTITUDE:
                 cv2.imwrite(save_directory + "/images/" + str(img_id) + ".png", frame)
-                telemetry_file.write(telemetry.to_string())
                 img_id += 1
                 telemetry_file.write(telemetry.to_string() + "\n")
 
@@ -186,9 +181,6 @@ def mode_1():
                 position_calculator.update_meters_per_pixel()
                 position_calculator.calculate_max_meters_area()
                 position_calculator.calculate_extreme_points()
-                my_mid = position_calculator.get_detection_on_image_cords(50.0676740, 19.9042260)
-                if my_mid is not None:
-                    cv2.circle(frame, my_mid, 22, (0, 0, 255), 3)
 
             cv2.putText(frame, telemetry.to_string(), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255))
             cv2.imshow("frame", frame)
@@ -211,7 +203,7 @@ def mode_1():
 
 
 def mode_2():
-    camera = BasicCamera()
+    camera = BasicCamera2()
     detector = Detector()
     telemetry = TelemetryThread()
     position_calculator = PositionCalculator(telemetry)
@@ -235,8 +227,6 @@ def mode_2():
                 continue
 
             update_detections_file = False
-
-            #frame = cv2.resize(frame, (Values.CAMERA_WIDTH, Values.CAMERA_HEIGHT))  # do wywalenia
 
             if telemetry.altitude > Values.MIN_ALTITUDE:
                 detections = detector.detect(frame)

@@ -1,6 +1,5 @@
 import cv2
 from settings.settings import Values
-import VideoCapture
 import numpy as np
 
 class Camera:
@@ -63,7 +62,7 @@ class CameraVideo:
         cv2.destroyAllWindows()
 
 
-class BasicCamera:
+"""class BasicCamera:
     def __init__(self):
 
         self.camera = VideoCapture.Device(devnum=Values.CAMERA, showVideoWindow=0)
@@ -82,7 +81,7 @@ class BasicCamera:
         return flipVertical
 
     def close(self):
-        cv2.destroyAllWindows()
+        cv2.destroyAllWindows()"""
 
 
 class BasicCamera2:
@@ -97,7 +96,10 @@ class BasicCamera2:
 
     def get_frame(self):
         ret, frame = self.camera.read()
-        return frame
+        if ret:
+            return frame
+        else:
+            return None
 
     def close(self):
         cv2.destroyAllWindows()

@@ -2,24 +2,24 @@
 
 class Values:
 
-    MODE = 1  # 0 - pc test, 1 - c# python save, 2 - c# python mission
+    MODE = 0  # 0 - pc test, 1 - c# python save, 2 - c# python mission
 
     PRINT_FPS = True
     SAVED_IMAGES_DIRECTORY = 'D:/mission_images'
 
     WRITE_TO_FILE = True
 
-    WEATHER_MODE = 0            # 0 - pochmurno,
+    WEATHER_MODE = 3           # 0 - pochmurno,
 
     MAX_AREA_DIFF = 0.2
     MAX_LONG_LAT_DIFF = 0.00004
-    MIN_AREA = 300
+    MIN_AREA = 1000
     MIN_ALTITUDE = 4
 
     BOX_COLOR = (0, 0, 255)
     BOX_SIZE_INCREASE = 10
 
-    CAMERA = 1
+    CAMERA = 0
 
     CAMERA_WIDTH = 1280
     CAMERA_HEIGHT = 720
@@ -43,5 +43,3 @@ class Values:
     VERTICAL_ANGLE = 36
 
     IMAGES_PATH = "saved_detections_images"
-
-

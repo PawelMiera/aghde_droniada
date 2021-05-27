@@ -9,9 +9,6 @@ class Detector(ImageProcessor):
 
     def __init__(self):
 
-        # nowy
-        #(0, 0, 68), (203, 167, 161)
-
         if Values.WEATHER_MODE == 0:
             self.brown_low = (0, 73, 141)
             self.brown_high = (18, 165, 209)
@@ -45,6 +42,15 @@ class Detector(ImageProcessor):
             self.white_low = (0, 0, 178)
             self.white_high = (168, 61, 255)
 
+        elif Values.WEATHER_MODE == 3:
+            self.brown_low = (0, 40, 165)
+            self.brown_high = (43, 167, 240)
+
+            self.white_low = (0, 0, 206)
+            self.white_high = (150, 31, 255)
+
+            self.orange_low = (0, 146, 225)
+            self.orange_high = (50, 206, 255)
 
     def extract_contours(self, image: np.array) -> np.array:
         hsv = self.to_hsv(image)
@@ -63,7 +69,7 @@ class Detector(ImageProcessor):
 
         contours_all_masks = [cnt_white, cnt_orange, cnt_brown]
 
-        #cv2.imshow("mask", mask_white + mask_orange + mask_brown )
+        cv2.imshow("mask", mask_white + mask_orange + mask_brown )
 
         return contours_all_masks
 
@@ -78,6 +84,7 @@ class Detector(ImageProcessor):
 
                 area = cv2.contourArea(cnt)
                 if area > Values.MIN_AREA:
+
                     bb = cv2.boundingRect(cnt)
                     shape, points = self.get_contour_shape(cnt, frame, bb)
 
