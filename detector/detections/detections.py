@@ -20,6 +20,8 @@ class Detection:
         self.last_seen = 0
         self.seen_times = 1
         self.filename = ""
+        self.update_firebase_detection = False
+        self.firebase_path = ""
 
     def update_color_id(self):
         self.color_id = np.argmax(self.color)

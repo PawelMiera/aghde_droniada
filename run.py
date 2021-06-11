@@ -16,8 +16,8 @@ from datetime import datetime
 def save_frame_crop(frame, rectangle, filename):
     if rectangle is not None:
         x, y, w, h = rectangle
-        x1 = x - 2*w
-        y1 = y - 2*h
+        x1 = x - 2 * w
+        y1 = y - 2 * h
         x2 = x + 3 * w
         y2 = y + 3 * h
 
@@ -37,6 +37,7 @@ def mode_0():
     position_calculator = PositionCalculator(telemetry)
 
     firebaseConnection = FirebaseConnection()
+    last_firebase_update = time.time()
 
     all_detections = []
     confirmed_detections = []
@@ -77,8 +78,7 @@ def mode_0():
 
             if time.time() - last_telemetry_publish_time > Values.TELEMETRY_UPDATE_TIME:
                 last_telemetry_publish_time = time.time()
-                #firebaseConnection.publish_telemetry(str(telemetry.latitude), str(telemetry.longitude),
-                #                                     str(telemetry.altitude))
+                #firebaseConnection.queue.put((2, (telemetry.latitude, telemetry.longitude, telemetry.altitude)))
 
             position_calculator.update_meters_per_pixel()
             position_calculator.calculate_max_meters_area()
@@ -94,6 +94,7 @@ def mode_0():
                     if d.check_detection(conf_d):
                         conf_d += d
                         conf_d.last_seen = time_index
+                        conf_d.update_firebase_detection = True
                         d.to_delete = True
                         update_detections_file = True
                         break
@@ -118,10 +119,11 @@ def mode_0():
                     filename = save_directory + "/detections/" + str(all_d.detection_id) + ".jpg"
                     save_frame_crop(frame, all_d.rectangle, filename)
                     all_d.filename = filename
+                    all_d.firebase_path = firebaseConnection.storage_cloud_path + str(all_d.detection_id) + ".jpg"
                     confirmed_detections.append(all_d)
-
-                    firebaseConnection.publish_detection(all_d.latitude, all_d.longitude, all_d.area_m,
-                                                         all_d.get_description(), all_d.filename, all_d.seen_times)
+                    firebaseConnection.queue.put((0, (all_d.detection_id, all_d.latitude, all_d.longitude, all_d.area_m,
+                                                      all_d.get_description(), all_d.filename, all_d.firebase_path,
+                                                      all_d.seen_times)))
 
                     update_detections_file = True
                     all_d.to_delete = True
@@ -134,7 +136,29 @@ def mode_0():
 
             all_detections = list(filter(lambda x: not x.to_delete, all_detections))
 
-            detections_file_text = "///////////////////////\n"
+            detections_file_text = "\n///////////////////////\n"
+
+            if time.time() - last_firebase_update > 1:
+                detection_dict = dict()
+                update_firebase = False
+                for conf_d in confirmed_detections:
+
+                    if conf_d.update_firebase_detection:
+                        conf_d.update_firebase_detection = False
+                        update_firebase = True
+                        det_info = {
+                            'area': conf_d.area_m,
+                            'description': conf_d.get_description(),
+                            'latitude': conf_d.latitude,
+                            'longitude': conf_d.longitude,
+                            'seen_times': conf_d.seen_times,
+                            'photo': conf_d.firebase_path
+                        }
+                        detection_dict[conf_d.detection_id] = det_info
+
+                if update_firebase:
+                    last_firebase_update = time.time()
+                    firebaseConnection.queue.put((1, detection_dict))
 
             for conf_d in confirmed_detections:
 
@@ -142,6 +166,7 @@ def mode_0():
                     detections_file_text += conf_d.getString()
 
                 my_mid = position_calculator.get_detection_on_image_cords(conf_d.latitude, conf_d.longitude)
+
                 if my_mid is not None:
                     conf_d.draw_confirmed_detection(frame, my_mid)
 
@@ -168,6 +193,7 @@ def mode_0():
             traceback.print_exc()
 
     camera.close()
+    firebaseConnection.close()
 
 
 def mode_1():
@@ -221,6 +247,11 @@ def mode_2():
     detector = Detector()
     telemetry = TelemetryThread()
     position_calculator = PositionCalculator(telemetry)
+
+    firebaseConnection = FirebaseConnection()
+    last_firebase_update = time.time()
+    last_telemetry_publish_time = 0
+
     all_detections = []
     confirmed_detections = []
     confirmed_detection_id = 0
@@ -246,6 +277,10 @@ def mode_2():
 
                 detections = detector.detect(frame)
 
+                if time.time() - last_telemetry_publish_time > Values.TELEMETRY_UPDATE_TIME:
+                    last_telemetry_publish_time = time.time()
+                    # firebaseConnection.queue.put((2, (telemetry.latitude, telemetry.longitude, telemetry.altitude)))
+
                 position_calculator.update_meters_per_pixel()
                 position_calculator.calculate_max_meters_area()
                 position_calculator.calculate_extreme_points()  # tylko potrzebne zeby wyswietlic stare wykrycia
@@ -260,6 +295,7 @@ def mode_2():
                         if d.check_detection(conf_d):
                             conf_d += d
                             conf_d.last_seen = time_index
+                            conf_d.update_firebase_detection = True
                             d.to_delete = True
                             update_detections_file = True
                             break
@@ -284,7 +320,13 @@ def mode_2():
                         filename = save_directory + "/detections/" + str(all_d.detection_id) + ".jpg"
                         save_frame_crop(frame, all_d.rectangle, filename)
                         all_d.filename = filename
+                        all_d.firebase_path = firebaseConnection.storage_cloud_path + str(all_d.detection_id) + ".jpg"
                         confirmed_detections.append(all_d)
+
+                        firebaseConnection.queue.put((0, (all_d.detection_id, all_d.latitude, all_d.longitude,
+                                                          all_d.area_m, all_d.get_description(), all_d.filename,
+                                                          all_d.firebase_path, all_d.seen_times)))
+
                         update_detections_file = True
                         all_d.to_delete = True
                     elif all_d.seen_times > 8:
@@ -296,7 +338,29 @@ def mode_2():
 
                 all_detections = list(filter(lambda x: not x.to_delete, all_detections))  # do sprawdzenia
 
-                detections_file_text = "///////////////////////\n"
+                detections_file_text = "\n///////////////////////\n"
+
+                if time.time() - last_firebase_update > 1:
+                    detection_dict = dict()
+                    update_firebase = False
+                    for conf_d in confirmed_detections:
+
+                        if conf_d.update_firebase_detection:
+                            conf_d.update_firebase_detection = False
+                            update_firebase = True
+                            det_info = {
+                                'area': conf_d.area_m,
+                                'description': conf_d.get_description(),
+                                'latitude': conf_d.latitude,
+                                'longitude': conf_d.longitude,
+                                'seen_times': conf_d.seen_times,
+                                'photo': conf_d.firebase_path
+                            }
+                            detection_dict[conf_d.detection_id] = det_info
+
+                    if update_firebase:
+                        last_firebase_update = time.time()
+                        firebaseConnection.queue.put((1, detection_dict))
 
                 for conf_d in confirmed_detections:
 
@@ -330,6 +394,8 @@ def mode_2():
 
     camera.close()
     detections_file.close()
+    firebaseConnection.close()
+    telemetry.close()
 
 
 if __name__ == '__main__':

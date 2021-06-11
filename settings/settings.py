@@ -2,7 +2,7 @@
 
 class Values:
 
-    MODE = 0  # 0 - pc test, 1 - c# python save, 2 - c# python mission
+    MODE = 2  # 0 - pc test, 1 - c# python save, 2 - c# python mission
 
     PRINT_FPS = True
     SAVED_IMAGES_DIRECTORY = 'D:/mission_images'

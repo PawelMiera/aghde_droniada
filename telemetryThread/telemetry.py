@@ -40,3 +40,6 @@ class TelemetryThread:
         return "{:.7f},{:.7f}".format(self.latitude, self.longitude) + "," + str(self.altitude) + "," + \
                str(self.azimuth) + "," + str(self.state)
         #print("lat", self.latitude, "lon", self.longitude, "alt", self.altitude, "azi", self.azimuth)
+
+    def close(self):
+        asyncore.close_all()
