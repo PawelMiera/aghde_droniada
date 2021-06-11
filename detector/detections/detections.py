@@ -59,15 +59,8 @@ class Detection:
                and abs(self.longitude - new_det.longitude) < Values.MAX_LONG_LAT_DIFF \
                and abs(self.area_m - new_det.area_m) < Values.MAX_AREA_DIFF
 
-    def draw_detection(self, frame):
-        for p in self.points:
-            cv2.circle(frame, p, 5, (0, 0, 255), -1)
-
-        if self.middle_point is not None:
-            cv2.circle(frame, tuple(self.middle_point), 10, (0, 255, 0), -1)
-
+    def get_description(self):
         label = ""
-
         if self.color_id is not None:
             if self.color_id == Values.ORANGE:
                 label = "Orange "
@@ -83,7 +76,17 @@ class Detection:
                 label += "Square"
             elif self.shape == Values.CIRCLE:
                 label += "Circle"
-        labels = [label]
+
+        return label
+
+    def draw_detection(self, frame):
+        for p in self.points:
+            cv2.circle(frame, p, 5, (0, 0, 255), -1)
+
+        if self.middle_point is not None:
+            cv2.circle(frame, tuple(self.middle_point), 10, (0, 255, 0), -1)
+
+        labels = [self.get_description()]
         if self.latitude is not None and self.longitude is not None:
             labels.append("Lat: " + '%.5f' % self.latitude)
             labels.append("Lon: " + '%.5f' % self.longitude)

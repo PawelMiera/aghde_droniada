@@ -29,6 +29,9 @@ class EchoHandler(asyncore.dispatcher_with_send):
                     elif val[0] == 'y':
                         self.telemetry.azimuth = float(val[1:])
 
+                    elif val[0] == 's':
+                        self.telemetry.state = int(val[1:])
+
             except Exception:
                 pass
 

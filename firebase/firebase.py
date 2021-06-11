@@ -23,49 +23,41 @@ class FirebaseConnection:
         result = self.database.child("drones").get()
 
         try:
-            for param in result.each():
-                drone_nr = param.key()
-            self.drone_nr = str(int(drone_nr) + 1)
+            drone_nr = len(result.val())
+            self.drone_nr = str(drone_nr)
         except:
             self.drone_nr = "0"
 
         self.storage_cloud_path = "images/" + self.drone_nr + "/"
 
-        self.set_position(0, 0, 0, 0)
-
         self.stream = self.database.child("drones").child(self.drone_nr).child("go_to").stream(self.stream_handler)
-
-    def set_position(self, lat, lon, alt, mod):
-        position = {
-            'altitude': alt,
-            'latitude': lat,
-            'longitude': lon,
-            'mode': mod
-        }
-        self.database.child("drones").child(self.drone_nr).child("go_to").set(position)
 
     def stream_handler(self, message):
         print(message)
 
-    def publish_detection(self, lat, long, area, description, path):
+    def publish_detection(self, lat, long, area, description, path, seen_times):
         filename = os.path.basename(path)
         firebase_path = self.storage_cloud_path + filename
         self.publish_image(path, firebase_path)
         result = self.database.child("drones").child(self.drone_nr).child("detections").get()
+
         try:
-            for param in result.each():
-                number_id = param.key()
-            number_id = str(int(number_id) + 1)
+            number_id = str(len(result.val()))
         except:
             number_id = "0"
+
         data = {
             'area': area,
             'description': description,
             'latitude': lat,
             'longitude': long,
             'photo': firebase_path,
+            'seen_times': seen_times
         }
         self.database.child("drones").child(self.drone_nr).child("detections").child(number_id).set(data)
+
+    def update_all_detections(self, confirmed_detections):
+        pass
 
     def publish_image(self, path, firebase_path):
         self.storage.child(firebase_path).put(path)

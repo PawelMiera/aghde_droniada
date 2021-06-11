@@ -148,10 +148,12 @@ class ImageWindow(QMainWindow):
     @pyqtSlot()
     def prev_frame(self):
         self.main_loop.id -= 1
+        print(self.main_loop.id, self.main_loop.median)
 
     @pyqtSlot()
     def next_frame(self):
         self.main_loop.id += 1
+        print(self.main_loop.id, self.main_loop.median)
 
     @pyqtSlot()
     def addMask(self):
@@ -180,7 +182,9 @@ class ImageWindow(QMainWindow):
 
         if event.key() == 78:
             self.main_loop.id += 1
+            print(self.main_loop.id, self.main_loop.median)
 
         if event.key() == 66:
             self.main_loop.id -= 1
+            print(self.main_loop.id, self.main_loop.median)
 

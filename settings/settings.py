@@ -9,10 +9,16 @@ class Values:
 
     WRITE_TO_FILE = True
 
-    WEATHER_MODE = 3           # 0 - pochmurno,
+    SHOW_MASKS = True
+
+    SHOW_BROWN_MASK = False
+    SHOW_ORANGE_MASK = False
+    SHOW_WHITE_MASK = False
+
+    TELEMETRY_UPDATE_TIME = 1
 
     MAX_AREA_DIFF = 0.2
-    MAX_LONG_LAT_DIFF = 0.00004
+    MAX_LONG_LAT_DIFF = 0.00007
     MIN_AREA = 1000
     MIN_ALTITUDE = 4
 
@@ -35,6 +41,8 @@ class Values:
     WHITE = 0
     ORANGE = 1
     BROWN = 2
+
+    EXECUTING = 7
 
     COLORS = [(188, 213, 213), (77, 152, 189), (91, 124, 149)]      #BGR
 

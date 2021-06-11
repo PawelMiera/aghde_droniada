@@ -1,6 +1,7 @@
 from settings.settings import Values
+from firebase.firebase import FirebaseConnection
 from detector.detector import Detector
-from camera.camera import Camera, BasicCamera2
+from camera.camera import *
 from telemetryThread.telemetry import TelemetryThread
 from telemetry.telemetry import Telemetry
 from positionCalculator.positionCalculator import PositionCalculator
@@ -34,6 +35,9 @@ def mode_0():
     detector = Detector()
     telemetry = Telemetry()
     position_calculator = PositionCalculator(telemetry)
+
+    firebaseConnection = FirebaseConnection()
+
     all_detections = []
     confirmed_detections = []
     confirmed_detection_id = 0
@@ -41,17 +45,20 @@ def mode_0():
     detections_file = open(save_directory + "/detections.txt", "w")
 
     time_index = 0
-    id = 150
+    id = 750
 
-    base_path = 'D:/mission_images/2021_05_27_09_49_31/'
+    base_path = 'D:/mission_images/4/'
 
-    with open(base_path + 'telemetry.txt') as f:
+    with open(base_path + 'output.txt') as f:
         reader = csv.reader(f)
         data = list(reader)
 
     if Values.PRINT_FPS:
         last_time = time.time()
         ind = 0
+
+    last_telemetry_publish_time = 0
+
     while True:
         try:
 
@@ -65,10 +72,13 @@ def mode_0():
 
             update_detections_file = False
 
-            frame = cv2.resize(frame, (Values.CAMERA_WIDTH, Values.CAMERA_HEIGHT))
-
             detections = detector.detect(frame)
             telemetry.update_telemetry(data[id])
+
+            if time.time() - last_telemetry_publish_time > Values.TELEMETRY_UPDATE_TIME:
+                last_telemetry_publish_time = time.time()
+                #firebaseConnection.publish_telemetry(str(telemetry.latitude), str(telemetry.longitude),
+                #                                     str(telemetry.altitude))
 
             position_calculator.update_meters_per_pixel()
             position_calculator.calculate_max_meters_area()
@@ -109,6 +119,10 @@ def mode_0():
                     save_frame_crop(frame, all_d.rectangle, filename)
                     all_d.filename = filename
                     confirmed_detections.append(all_d)
+
+                    firebaseConnection.publish_detection(all_d.latitude, all_d.longitude, all_d.area_m,
+                                                         all_d.get_description(), all_d.filename, all_d.seen_times)
+
                     update_detections_file = True
                     all_d.to_delete = True
                 elif all_d.seen_times > 8:
@@ -228,7 +242,8 @@ def mode_2():
 
             update_detections_file = False
 
-            if telemetry.altitude > Values.MIN_ALTITUDE:
+            if telemetry.altitude > Values.MIN_ALTITUDE and telemetry.state == Values.EXECUTING:
+
                 detections = detector.detect(frame)
 
                 position_calculator.update_meters_per_pixel()
