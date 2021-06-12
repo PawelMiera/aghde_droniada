@@ -1,13 +1,12 @@
 import cv2
 import numpy as np
 from detector.image_processor import ImageProcessor
-from detector.detections.detections import Detection
+from detectorCircles.detections.detections import Detection
 from settings.settings import Values
 import time
-from additionalFunctions.additionsalFunctions import my_distance
 
 
-class Detector(ImageProcessor):
+class CircleDetector(ImageProcessor):
 
     def __init__(self):
 
@@ -96,21 +95,19 @@ class Detector(ImageProcessor):
             self.update_color_ranges(hsv)
             self.last_color_update = time.time()
 
-        mask_brown = cv2.inRange(hsv, self.brown_low, self.brown_high)
+        #mask_brown = cv2.inRange(hsv, self.brown_low, self.brown_high)
         mask_white = cv2.inRange(hsv, self.white_low, self.white_high)
         mask_orange = cv2.inRange(hsv, self.orange_low, self.orange_high)
 
         cnt_white = self.find_contours(mask_white)
         cnt_orange = self.find_contours(mask_orange)
-        cnt_brown = self.find_contours(mask_brown)     # + mask_brown_2
+        #cnt_brown = self.find_contours(mask_brown)
 
-        contours_all_masks = [cnt_white, cnt_orange, cnt_brown]
+        contours_all_masks = [cnt_white, cnt_orange]            #mozna dac brown + white jeszcze
 
         if Values.SHOW_MASKS:
-            cv2.imshow("masks", mask_white + mask_orange + mask_brown)
+            cv2.imshow("masks", mask_white + mask_orange)
 
-        if Values.SHOW_BROWN_MASK:
-            cv2.imshow("brown", mask_brown)
         if Values.SHOW_ORANGE_MASK:
             cv2.imshow("orange", mask_orange)
         if Values.SHOW_WHITE_MASK:
@@ -135,15 +132,12 @@ class Detector(ImageProcessor):
 
                     if shape is not None:
 
-                        if shape != Values.TRIANGLE:
-                            mid = [int(bb[0] + 0.5 * bb[2]), int(bb[1] + 0.5 * bb[2])]
-                        else:
-                            mid = np.mean(points, axis=0, dtype=np.int)
+                        mid = [int(bb[0] + 0.5 * bb[2]), int(bb[1] + 0.5 * bb[2])]
 
                         detection_color = [0, 0, 0]
                         detection_color[c] += 1
 
-                        detection = Detection(shape, bb, area, detection_color, points, mid)
+                        detection = Detection(bb, detection_color, mid)
                         detections.append(detection)
 
         return detections
@@ -158,34 +152,15 @@ class Detector(ImageProcessor):
         points = []
 
         if cv2.isContourConvex(approx):
-            if length == 3:
 
-                for i in range(length):
+            if length == 4:
+                pass
+                """for i in range(length):
                     points.append((approx[i][0][0], approx[i][0][1]))
 
-                distances = [my_distance(points[0], points[1]), my_distance(points[0], points[2]),
-                             my_distance(points[1], points[2])]
-
-                my_mean = np.mean(distances)
-
-                differences = np.abs(np.subtract(distances, my_mean))
-
-                sizes_check = np.greater(differences, 0.1 * my_mean)
-
-                wrong_size = np.any(sizes_check)
-
-                if not wrong_size:
-                    area = int(my_mean * my_mean * 0.86602540378)  # sqrt(3)/4
-                    shape = Values.TRIANGLE
-
-            elif length == 4:
-
-                for i in range(length):
-                    points.append((approx[i][0][0], approx[i][0][1]))
-
-                distances = [my_distance(points[0], points[1]), my_distance(points[0], points[2]),
-                             my_distance(points[0], points[3]), my_distance(points[1], points[2]),
-                             my_distance(points[1], points[3]), my_distance(points[2], points[3])]
+                distances = [self.my_distance(points[0], points[1]), self.my_distance(points[0], points[2]),
+                             self.my_distance(points[0], points[3]), self.my_distance(points[1], points[2]),
+                             self.my_distance(points[1], points[3]), self.my_distance(points[2], points[3])]
 
                 distances.sort()
 
@@ -197,11 +172,7 @@ class Detector(ImageProcessor):
 
                 sizes_check = np.greater(differences, 0.1 * my_mean)
 
-                wrong_size = np.any(sizes_check)
-
-                if not wrong_size:
-                    area = int(my_mean * my_mean)
-                    shape = Values.SQUARE
+                wrong_size = np.any(sizes_check)"""
 
             elif length >= 6:
 
@@ -227,4 +198,5 @@ class Detector(ImageProcessor):
                     shape = Values.CIRCLE
 
         return shape, points, area
+
 

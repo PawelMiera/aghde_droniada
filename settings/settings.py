@@ -2,7 +2,7 @@
 
 class Values:
 
-    MODE = 2  # 0 - pc test, 1 - c# python save, 2 - c# python mission
+    MODE = 0  # 0 - pc test, 1 - c# python save, 2 - c# python mission
 
     PRINT_FPS = True
     SAVED_IMAGES_DIRECTORY = 'D:/mission_images'
@@ -51,3 +51,7 @@ class Values:
     VERTICAL_ANGLE = 36
 
     IMAGES_PATH = "saved_detections_images"
+
+    QUEUED = 0
+    ELIMINATED = 1
+    NOT_ELIMINATED = 2
