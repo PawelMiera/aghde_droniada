@@ -125,7 +125,7 @@ class CircleDetector(ImageProcessor):
             for cnt in contours[c]:
 
                 area = cv2.contourArea(cnt)
-                if area > Values.MIN_AREA:
+                if Values.MIN_AREA < area < Values.MAX_AREA:
 
                     bb = cv2.boundingRect(cnt)
                     shape, points, area = self.get_contour_shape(cnt, frame, bb)

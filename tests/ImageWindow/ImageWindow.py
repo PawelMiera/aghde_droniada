@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QMainWindow, QLabel, QSlider, QGroupBox, QVBoxLayout
 from PyQt5.QtWidgets import QWidget, QGridLayout, QPushButton
 from PyQt5.QtCore import Qt
 from PyQt5.uic.properties import QtCore
-
+import time
 
 class ImageWindow(QMainWindow):
 
@@ -148,11 +148,13 @@ class ImageWindow(QMainWindow):
     @pyqtSlot()
     def prev_frame(self):
         self.main_loop.id -= 1
+        time.sleep(0.1)
         print(self.main_loop.id, self.main_loop.median)
 
     @pyqtSlot()
     def next_frame(self):
         self.main_loop.id += 1
+        time.sleep(0.05)
         print(self.main_loop.id, self.main_loop.median)
 
     @pyqtSlot()
@@ -181,10 +183,8 @@ class ImageWindow(QMainWindow):
     def keyPressEvent(self, event):
 
         if event.key() == 78:
-            self.main_loop.id += 1
-            print(self.main_loop.id, self.main_loop.median)
+            self.next_frame()
 
         if event.key() == 66:
-            self.main_loop.id -= 1
-            print(self.main_loop.id, self.main_loop.median)
+            self.prev_frame()
 

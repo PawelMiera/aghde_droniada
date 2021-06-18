@@ -2,10 +2,10 @@
 
 class Values:
 
-    MODE = 0  # 0 - pc test, 1 - c# python save, 2 - c# python mission
+    MODE = 1 # 0 - pc test, 1 - c# python save, 2 - c# python mission
 
     PRINT_FPS = True
-    SAVED_IMAGES_DIRECTORY = 'D:/mission_images'
+    SAVED_IMAGES_DIRECTORY = 'D:/mission_images'    #8000iso400
 
     WRITE_TO_FILE = True
 
@@ -17,10 +17,11 @@ class Values:
 
     TELEMETRY_UPDATE_TIME = 1
 
-    MAX_AREA_DIFF = 0.2
+    MAX_AREA_DIFF = 0.5
     MAX_LONG_LAT_DIFF = 0.00007
-    MIN_AREA = 1000
-    MIN_ALTITUDE = 4
+    MIN_AREA = 250
+    MAX_AREA = 12200
+    MIN_ALTITUDE = 15
 
     BOX_COLOR = (0, 0, 255)
     BOX_SIZE_INCREASE = 10

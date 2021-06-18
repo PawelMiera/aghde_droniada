@@ -127,5 +127,6 @@ class Detection:
         label += str(self.latitude) + ","
         label += str(self.longitude) + ","
         label += str(self.seen_times) + ","
+        label += str(self.color_id) + ","
         label += str(self.filename) + "\n"
         return label

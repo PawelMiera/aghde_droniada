@@ -15,6 +15,7 @@ from settings.settings import Values
 
 from telemetry.telemetry import Telemetry
 
+
 def main_test():
     camera = BasicCamera2()
     detector = CircleDetector()
@@ -28,7 +29,6 @@ def main_test():
     all_detections = []
     confirmed_detections = []
     confirmed_detection_id = 0
-    time_index = 0
 
     detections_file = open(save_directory + "/targets.txt", "w")
 
@@ -44,7 +44,6 @@ def main_test():
     with open(base_path + 'output.txt') as f:
         reader = csv.reader(f)
         data = list(reader)
-
 
     while True:
         try:
@@ -110,7 +109,7 @@ def main_test():
 
                         firebaseConnection.queue.put((0, (all_d.detection_id, all_d.latitude, all_d.longitude,
                                                           all_d.get_description(), all_d.filename,
-                                                          all_d.firebase_path, all_d.seen_times)))
+                                                          all_d.firebase_path, all_d.seen_times, all_d.color_id)))
 
                         update_detections_file = True
                         all_d.to_delete = True
@@ -138,6 +137,7 @@ def main_test():
                                 str(conf_d.detection_id) + '/latitude': conf_d.latitude,
                                 str(conf_d.detection_id) + '/longitude': conf_d.longitude,
                                 str(conf_d.detection_id) + '/seen_times': conf_d.seen_times,
+                                str(conf_d.detection_id) + '/color': conf_d.color_id,
                             }
                             detection_dict.update(det_info)
 
@@ -181,8 +181,6 @@ def main_test():
     camera.close()
     detections_file.close()
     firebaseConnection.close()
-
-
 
 
 def main():
@@ -266,7 +264,7 @@ def main():
 
                         firebaseConnection.queue.put((0, (all_d.detection_id, all_d.latitude, all_d.longitude,
                                                           all_d.get_description(), all_d.filename,
-                                                          all_d.firebase_path, all_d.seen_times)))
+                                                          all_d.firebase_path, all_d.seen_times, all_d.color_id)))
 
                         update_detections_file = True
                         all_d.to_delete = True
@@ -294,6 +292,7 @@ def main():
                                 str(conf_d.detection_id) + '/latitude': conf_d.latitude,
                                 str(conf_d.detection_id) + '/longitude': conf_d.longitude,
                                 str(conf_d.detection_id) + '/seen_times': conf_d.seen_times,
+                                str(conf_d.detection_id) + '/color': conf_d.color_id,
                             }
                             detection_dict.update(det_info)
 

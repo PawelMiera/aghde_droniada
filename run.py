@@ -11,7 +11,8 @@ import traceback
 import os
 import csv
 from datetime import datetime
-from additionalFunctions.additionsalFunctions import save_frame_crop
+from additionalFunctions.additionsalFunctions import get_frame_crop
+from savingThread.savingThread import SavingThread
 
 
 def mode_0():
@@ -19,6 +20,8 @@ def mode_0():
     detector = Detector()
     telemetry = Telemetry()
     position_calculator = PositionCalculator(telemetry)
+
+    savingThread = SavingThread()
 
     firebaseConnection = FirebaseConnection()
     last_firebase_update = time.time()
@@ -30,9 +33,9 @@ def mode_0():
     detections_file = open(save_directory + "/detections.txt", "w")
 
     time_index = 0
-    id = 760
+    id = 444
 
-    base_path = 'D:/mission_images/4/'
+    base_path = 'D:/mission_images/8/'
 
     with open(base_path + 'output.txt') as f:
         reader = csv.reader(f)
@@ -55,6 +58,8 @@ def mode_0():
             if frame is None:
                 continue
 
+            frame_copy = frame.copy()
+
             update_detections_file = False
 
             detections = detector.detect(frame)
@@ -62,7 +67,7 @@ def mode_0():
 
             if time.time() - last_telemetry_publish_time > Values.TELEMETRY_UPDATE_TIME:
                 last_telemetry_publish_time = time.time()
-                #firebaseConnection.queue.put((2, (telemetry.latitude, telemetry.longitude, telemetry.altitude)))
+                firebaseConnection.queue.put((2, (telemetry.latitude, telemetry.longitude, telemetry.altitude)))
 
             position_calculator.update_meters_per_pixel()
             position_calculator.calculate_max_meters_area()
@@ -101,7 +106,7 @@ def mode_0():
                     all_d.detection_id = confirmed_detection_id
                     confirmed_detection_id += 1
                     filename = save_directory + "/detections/" + str(all_d.detection_id) + ".jpg"
-                    save_frame_crop(frame, all_d.rectangle, filename)
+                    savingThread.queue.put((filename, get_frame_crop(frame_copy, all_d.rectangle)))
                     all_d.filename = filename
                     all_d.firebase_path = firebaseConnection.storage_cloud_path + str(all_d.detection_id) + ".jpg"
                     confirmed_detections.append(all_d)
@@ -161,13 +166,13 @@ def mode_0():
 
             time_index += 1
             id += 1
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            if cv2.waitKey(0) & 0xFF == ord('q'):
                 break
 
             if Values.PRINT_FPS:
                 ind += 1
                 if time.time() - last_time > 1:
-                    print("FPS:", ind)
+                    print("FPS:", ind, "Frame count:", savingThread.queue.qsize())
                     ind = 0
                     last_time = time.time()
 
@@ -176,13 +181,15 @@ def mode_0():
             traceback.print_exc()
 
     camera.close()
+    savingThread.close()
     firebaseConnection.close()
 
 
 def mode_1():
     camera = BasicCamera2()
     telemetry = TelemetryThread()
-    position_calculator = PositionCalculator(telemetry)  # do wywalenia
+    savingThread = SavingThread()
+
     img_id = 0
     telemetry_file = open(save_directory + "/telemetry.txt", "a+")
     if Values.PRINT_FPS:
@@ -196,14 +203,11 @@ def mode_1():
                 continue
 
             if telemetry.altitude > Values.MIN_ALTITUDE:
-                cv2.imwrite(save_directory + "/images/" + str(img_id) + ".png", frame)
+
+                savingThread.queue.put((save_directory + "/images/" + str(img_id) + ".jpg", frame))
+                #cv2.imwrite(save_directory + "/images/" + str(img_id) + ".png", frame)
                 img_id += 1
                 telemetry_file.write(telemetry.to_string() + "\n")
-
-            if telemetry.latitude != 0 and telemetry.altitude > 2:
-                position_calculator.update_meters_per_pixel()
-                position_calculator.calculate_max_meters_area()
-                position_calculator.calculate_extreme_points()
 
             cv2.putText(frame, telemetry.to_string(), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255))
             cv2.imshow("frame", frame)
@@ -214,7 +218,7 @@ def mode_1():
             if Values.PRINT_FPS:
                 ind += 1
                 if time.time() - last_time > 1:
-                    print("FPS:", ind)
+                    print("FPS:", ind, "Frame count:", savingThread.queue.qsize())
                     ind = 0
                     last_time = time.time()
 
@@ -222,6 +226,7 @@ def mode_1():
             print("Some error accrued: ")
             traceback.print_exc()
     telemetry_file.close()
+    savingThread.close()
     camera.close()
 
 
@@ -230,6 +235,7 @@ def mode_2():
     detector = Detector()
     telemetry = TelemetryThread()
     position_calculator = PositionCalculator(telemetry)
+    savingThread = SavingThread()
 
     firebaseConnection = FirebaseConnection()
     last_firebase_update = time.time()
@@ -254,15 +260,17 @@ def mode_2():
             if frame is None:
                 continue
 
+            frame_copy = frame.copy()
+
             update_detections_file = False
 
-            if telemetry.altitude > Values.MIN_ALTITUDE and telemetry.state == Values.EXECUTING:
+            if telemetry.altitude > Values.MIN_ALTITUDE:    # and telemetry.state == Values.EXECUTING:
 
                 detections = detector.detect(frame)
 
                 if time.time() - last_telemetry_publish_time > Values.TELEMETRY_UPDATE_TIME:
                     last_telemetry_publish_time = time.time()
-                    # firebaseConnection.queue.put((2, (telemetry.latitude, telemetry.longitude, telemetry.altitude)))
+                    firebaseConnection.queue.put((2, (telemetry.latitude, telemetry.longitude, telemetry.altitude)))
 
                 position_calculator.update_meters_per_pixel()
                 position_calculator.calculate_max_meters_area()
@@ -301,7 +309,9 @@ def mode_2():
                         all_d.detection_id = confirmed_detection_id
                         confirmed_detection_id += 1
                         filename = save_directory + "/detections/" + str(all_d.detection_id) + ".jpg"
-                        save_frame_crop(frame, all_d.rectangle, filename)
+
+                        savingThread.queue.put((filename, get_frame_crop(frame_copy, all_d.rectangle)))
+
                         all_d.filename = filename
                         all_d.firebase_path = firebaseConnection.storage_cloud_path + str(all_d.detection_id) + ".jpg"
                         confirmed_detections.append(all_d)
@@ -366,7 +376,7 @@ def mode_2():
             if Values.PRINT_FPS:
                 ind += 1
                 if time.time() - last_time > 1:
-                    print("FPS:", ind)
+                    print("FPS:", ind, "Frame count:", savingThread.queue.qsize())
                     ind = 0
                     last_time = time.time()
 
@@ -376,6 +386,7 @@ def mode_2():
 
     camera.close()
     detections_file.close()
+    savingThread.close()
     firebaseConnection.close()
     telemetry.close()
 

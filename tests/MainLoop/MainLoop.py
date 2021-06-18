@@ -20,71 +20,88 @@ class MainLoop(Thread):
         val = self.median
 
         if val < 14:
-            white_low = (0, 0, 170)
-            white_high = (190, 94, 255)
-            orange_low = (0, 146, 130)
-            orange_high = (50, 229, 222)
-            brown_low = (0, 35, 100)
-            brown_high = (33, 168, 160)
+            self.white_low = (0, 0, 170)
+            self.white_high = (190, 94, 255)
+            self.orange_low = (0, 146, 130)
+            self.orange_high = (50, 229, 222)
+            self.brown_low = (0, 35, 100)
+            self.brown_high = (33, 168, 160)
 
         elif 14 <= val < 25:
-            white_low = (0, 0, 210)
-            white_high = (190, 40, 255)
-            orange_low = (0, 146, 176)
-            orange_high = (50, 209, 222)
-            brown_low = (0, 35, 100)
-            brown_high = (33, 168, 160)
-        elif 25 <= val < 38:
-            white_low = (0, 0, 210)
-            white_high = (190, 40, 255)
-            orange_low = (9, 128, 215)
-            orange_high = (21, 195, 255)    #s179
-            brown_low = (0, 45, 164)        #s87
-            brown_high = (25, 151, 208)        #h21
-        elif 38 <= val < 48:
-            white_low = (0, 0, 210)
-            white_high = (190, 40, 255)
-            orange_low = (0, 135, 225)
-            orange_high = (51, 195, 255)
-            brown_low = (0, 66, 142)            ## v187 s83
-            brown_high = (34, 159, 240)         ## v210  v230(9)
-        elif 48 <= val < 58:
-            white_low = (0, 0, 210)
-            white_high = (190, 40, 255)
-            orange_low = (0, 132, 200)          ### s124 v194  s132(4)
-            orange_high = (51, 220, 255)        ## s 199
-            brown_low = (0, 39, 160)        ## v150     #169
-            brown_high = (35, 148, 242)     ## v216
-        elif 58 <= val < 65:
-            white_low = (0, 0, 210)
-            white_high = (190, 40, 255)
-            orange_low = (0, 144, 212)      #168
-            orange_high = (50, 228, 255)
-            brown_low = (0, 65, 154)           #s92         #sprawdz braz
-            brown_high = (20, 147, 220)         #v198
-        elif 65 <= val < 73:
-            white_low = (0, 0, 210)
-            white_high = (190, 40, 255)
-            orange_low = (0, 110, 224)      #s110
-            orange_high = (52, 214, 255)    #s 172
-            brown_low = (0, 46, 175)
-            brown_high = (198, 91, 243)     #v235
-        else:
-            white_low = (0, 0, 210)
-            white_high = (190, 40, 255)
-            orange_low = (0, 99, 225)
-            orange_high = (50, 193, 255)        #v250
-            brown_low = (0, 44, 185)
-            brown_high = (38, 152, 230)
+            self.white_low = (0, 0, 210)
+            self.white_high = (190, 40, 255)
+            self.orange_low = (0, 146, 176)
+            self.orange_high = (50, 209, 222)
+            self.brown_low = (0, 35, 100)
+            self.brown_high = (33, 168, 160)
 
-        mask_white = cv2.inRange(hsv, white_low, white_high)
-        mask_orange = cv2.inRange(hsv, orange_low, orange_high)
-        mask_brown = cv2.inRange(hsv, brown_low, brown_high)
+        elif 25 <= val < 38:
+            self.white_low = (0, 0, 210)
+            self.white_high = (190, 40, 255)
+            self.orange_low = (9, 128, 215)
+            self.orange_high = (21, 195, 255)    #s179
+            self.brown_low = (0, 45, 164)        #s87
+            self.brown_high = (25, 151, 208)        #h21
+
+        elif 38 <= val < 48:
+            self.white_low = (0, 0, 210)
+            self.white_high = (190, 40, 255)
+            self.orange_low = (0, 135, 225)
+            self.orange_high = (51, 195, 255)
+            self.brown_low = (0, 66, 142)            ## v187 s83
+            self.brown_high = (34, 159, 240)         ## v210  v230(9)
+
+        elif 48 <= val < 58:
+            self.white_low = (0, 0, 210)
+            self.white_high = (190, 40, 255)
+            self.orange_low = (0, 132, 200)          ### s124 v194  s132(4)
+            self.orange_high = (51, 220, 255)        ## s 199
+            self.brown_low = (0, 39, 160)        ## v150     #169
+            self.brown_high = (35, 148, 242)     ## v216
+
+        elif 58 <= val < 65:
+            self.white_low = (0, 0, 210)
+            self.white_high = (190, 40, 255)
+            self.orange_low = (0, 90, 212)      #168
+            self.orange_high = (50, 228, 255)
+            self.brown_low = (0, 65, 154)           #s92         #sprawdz braz
+            self.brown_high = (20, 147, 240)         #v198  v220
+
+        elif 65 <= val < 73:
+            self.white_low = (0, 0, 210)
+            self.white_high = (190, 40, 255)
+            self.orange_low = (0, 130, 224)      #s110  s 105
+            self.orange_high = (52, 150, 255)    #s 172
+            self.brown_low = (0, 46, 175)
+            self.brown_high = (198, 135, 255)     #v235  s91
+
+        else:
+            self.white_low = (0, 0, 210)
+            self.white_high = (190, 40, 255)
+            self.orange_low = (0, 99, 225)
+            self.orange_high = (50, 193, 255)        #v250
+            self.brown_low = (0, 44, 185)
+            self.brown_high = (38, 152, 230)
+
+        mask_white = cv2.inRange(hsv, self.white_low, self.white_high)
+        mask_orange = cv2.inRange(hsv, self.orange_low, self.orange_high)
+        mask_brown = cv2.inRange(hsv, self.brown_low, self.brown_high)
 
         cv2.imshow("white", mask_white)
         cv2.imshow("brown", mask_brown)
         cv2.imshow("orange", mask_orange)
         cv2.waitKey(1)
+
+
+        """cts, h = cv2.findContours(mask_white + mask_orange + mask_brown, cv2.RETR_LIST,
+                                  cv2.CHAIN_APPROX_SIMPLE)
+
+        for c in cts:
+            area = cv2.contourArea(c)
+            cv2.drawContours(hsv, c, -1, (0, 0, 0), 3)
+            cv2.imshow("mhsv", hsv)
+            print(area)
+            cv2.waitKey(0)"""
 
 
     def __init__(self):
@@ -148,7 +165,7 @@ class MainLoop(Thread):
 
         last_id = -1
 
-        self.id = 111
+        self.id = 0
 
         while True:
             if self.stop_loop:
@@ -156,7 +173,7 @@ class MainLoop(Thread):
 
             path = "tests/to_train2/" + str(self.id) + ".png"
 
-            path = 'D:/mission_images/10/images'
+            path = 'D:/mission_images/12/images'
 
             self.frame = cv2.imread(path + "/" + str(self.id) + ".png")
 

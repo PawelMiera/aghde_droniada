@@ -55,7 +55,7 @@ class FirebaseConnectionCircles:
 
                 if item[0] == 0:
                     d = item[1]
-                    self.publish_target(d[0], d[1], d[2], d[3], d[4], d[5], d[6])
+                    self.publish_target(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7])
                 elif item[0] == 1:
                     d = item[1]
                     self.update_all_targets(d)
@@ -68,7 +68,7 @@ class FirebaseConnectionCircles:
     def stream_handler(self, message):
         print(message)
 
-    def publish_target(self, number_id, lat, long, description, path, firebase_path, seen_times):
+    def publish_target(self, number_id, lat, long, description, path, firebase_path, seen_times, color):
 
         self.publish_image(path, firebase_path)
 
@@ -78,7 +78,8 @@ class FirebaseConnectionCircles:
             'longitude': long,
             'photo': firebase_path,
             'eliminated': Values.QUEUED,
-            'seen_times': seen_times
+            'seen_times': seen_times,
+            'color': color
         }
         self.database.child("circles").child("targets").child(number_id).set(data)
 

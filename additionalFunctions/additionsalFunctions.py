@@ -1,7 +1,8 @@
 from settings.settings import Values
 import cv2
 
-def save_frame_crop(frame, rectangle, filename):
+
+def get_frame_crop(frame, rectangle):
     if rectangle is not None:
         x, y, w, h = rectangle
         x1 = x - 2 * w
@@ -15,7 +16,7 @@ def save_frame_crop(frame, rectangle, filename):
         y2 = min(Values.CAMERA_HEIGHT, y2)
         crop = frame[y1:y2, x1:x2]
         crop = cv2.resize(crop, (400, 400))
-        cv2.imwrite(filename, crop)
+        return crop
 
 
 def my_distance(v, u):

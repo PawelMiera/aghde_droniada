@@ -10,7 +10,7 @@ class TelemetryThread:
         self.azimuth = 0
         self.state = 1
 
-        self.server = EchoServer('127.0.0.1', 6969, self)
+        self.server = EchoServer('127.0.0.1', 6868, self)
         self.thread = threading.Thread(target=self.start_thread)
         self.thread.daemon = True
         self.thread.start()

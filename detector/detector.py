@@ -68,18 +68,18 @@ class Detector(ImageProcessor):
         elif 58 <= val < 65:
             self.white_low = (0, 0, 210)
             self.white_high = (190, 40, 255)
-            self.orange_low = (0, 144, 212)      #168
+            self.orange_low = (0, 90, 212)      #168
             self.orange_high = (50, 228, 255)
             self.brown_low = (0, 65, 154)           #s92         #sprawdz braz
-            self.brown_high = (20, 147, 220)         #v198
+            self.brown_high = (20, 147, 240)         #v198  v220
 
         elif 65 <= val < 73:
             self.white_low = (0, 0, 210)
             self.white_high = (190, 40, 255)
-            self.orange_low = (0, 110, 224)      #s110
-            self.orange_high = (52, 214, 255)    #s 172
+            self.orange_low = (0, 130, 224)      #s110  s 105
+            self.orange_high = (52, 150, 255)    #s 172
             self.brown_low = (0, 46, 175)
-            self.brown_high = (198, 91, 243)     #v235
+            self.brown_high = (198, 135, 255)     #v235  s91
 
         else:
             self.white_low = (0, 0, 210)
@@ -128,7 +128,7 @@ class Detector(ImageProcessor):
             for cnt in contours[c]:
 
                 area = cv2.contourArea(cnt)
-                if area > Values.MIN_AREA:
+                if Values.MIN_AREA < area < Values.MAX_AREA:
 
                     bb = cv2.boundingRect(cnt)
                     shape, points, area = self.get_contour_shape(cnt, frame, bb)
