@@ -2,7 +2,7 @@
 
 class Values:
 
-    MODE = 1 # 0 - pc test, 1 - c# python save, 2 - c# python mission
+    MODE = 0 # 0 - pc test, 1 - c# python save, 2 - c# python mission
 
     PRINT_FPS = True
     SAVED_IMAGES_DIRECTORY = 'D:/mission_images'    #8000iso400
@@ -19,9 +19,11 @@ class Values:
 
     MAX_AREA_DIFF = 0.5
     MAX_LONG_LAT_DIFF = 0.00007
-    MIN_AREA = 250
+    MIN_AREA = 220
     MAX_AREA = 12200
     MIN_ALTITUDE = 15
+
+    MIN_NOT_WHITE = 8
 
     BOX_COLOR = (0, 0, 255)
     BOX_SIZE_INCREASE = 10

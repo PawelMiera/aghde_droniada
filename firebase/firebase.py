@@ -2,6 +2,8 @@ import pyrebase
 import os
 import threading, queue
 import time
+import os.path
+import traceback
 
 
 class FirebaseConnection:
@@ -35,34 +37,41 @@ class FirebaseConnection:
         self.stream = self.database.child("drones").child(self.drone_nr).child("go_to").stream(self.stream_handler)
         self.publish_telemetry(0, 0, 0)
 
-        self.queue = queue.Queue()
+        #self.queue = queue.Queue()
 
         self.end_thread = False
 
-        self.thread = threading.Thread(target=self.start_thread)
-        self.thread.daemon = True
-        self.thread.start()
+        #self.thread = threading.Thread(target=self.start_thread)
+        #self.thread.daemon = True
+        #self.thread.start()
 
     def start_thread(self):
         while True:
+            try:
+                if self.end_thread:
+                    break
 
-            if self.end_thread:
-                break
+                if not self.queue.empty():
+                    item = self.queue.get()
 
-            if not self.queue.empty():
-                item = self.queue.get()
+                    if item[0] == 0:
+                        d = item[1]
 
-                if item[0] == 0:
-                    d = item[1]
-                    self.publish_detection(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7])
-                elif item[0] == 1:
-                    d = item[1]
-                    self.update_all_detections(d)
-                elif item[0] == 2:
-                    d = item[1]
-                    self.publish_telemetry(d[0], d[1], d[2])
-            else:
-                time.sleep(0.01)
+                        if os.path.isfile(d[5]):
+                            self.publish_detection(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7])
+                        else:
+                            self.queue.put(item)
+                    elif item[0] == 1:
+                        d = item[1]
+                        self.update_all_detections(d)
+                    elif item[0] == 2:
+                        d = item[1]
+                        self.publish_telemetry(d[0], d[1], d[2])
+                else:
+                    time.sleep(0.01)
+            except Exception:
+                print("Some error accrued: ")
+                traceback.print_exc()
 
     def stream_handler(self, message):
         print(message)

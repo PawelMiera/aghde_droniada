@@ -21,9 +21,10 @@ def mode_0():
     telemetry = Telemetry()
     position_calculator = PositionCalculator(telemetry)
 
-    savingThread = SavingThread()
-
     firebaseConnection = FirebaseConnection()
+
+    savingThread = SavingThread(firebaseConnection)
+
     last_firebase_update = time.time()
 
     all_detections = []
@@ -35,7 +36,7 @@ def mode_0():
     time_index = 0
     id = 444
 
-    base_path = 'D:/mission_images/8/'
+    base_path = 'D:/mission_images/5/'
 
     with open(base_path + 'output.txt') as f:
         reader = csv.reader(f)
@@ -67,7 +68,7 @@ def mode_0():
 
             if time.time() - last_telemetry_publish_time > Values.TELEMETRY_UPDATE_TIME:
                 last_telemetry_publish_time = time.time()
-                firebaseConnection.queue.put((2, (telemetry.latitude, telemetry.longitude, telemetry.altitude)))
+                savingThread.queue.put((2, (telemetry.latitude, telemetry.longitude, telemetry.altitude)))
 
             position_calculator.update_meters_per_pixel()
             position_calculator.calculate_max_meters_area()
@@ -106,13 +107,13 @@ def mode_0():
                     all_d.detection_id = confirmed_detection_id
                     confirmed_detection_id += 1
                     filename = save_directory + "/detections/" + str(all_d.detection_id) + ".jpg"
-                    savingThread.queue.put((filename, get_frame_crop(frame_copy, all_d.rectangle)))
+                    savingThread.queue.put((3, filename, get_frame_crop(frame_copy, all_d.rectangle)))
                     all_d.filename = filename
                     all_d.firebase_path = firebaseConnection.storage_cloud_path + str(all_d.detection_id) + ".jpg"
                     confirmed_detections.append(all_d)
-                    firebaseConnection.queue.put((0, (all_d.detection_id, all_d.latitude, all_d.longitude, all_d.area_m,
-                                                      all_d.get_description(), all_d.filename, all_d.firebase_path,
-                                                      all_d.seen_times)))
+                    savingThread.queue.put((0, (all_d.detection_id, all_d.latitude, all_d.longitude, all_d.area_m,
+                                                all_d.get_description(), all_d.filename, all_d.firebase_path,
+                                                all_d.seen_times)))
 
                     update_detections_file = True
                     all_d.to_delete = True
@@ -146,7 +147,7 @@ def mode_0():
 
                 if update_firebase:
                     last_firebase_update = time.time()
-                    firebaseConnection.queue.put((1, detection_dict))
+                    savingThread.queue.put((1, detection_dict))
 
             for conf_d in confirmed_detections:
 
@@ -166,7 +167,7 @@ def mode_0():
 
             time_index += 1
             id += 1
-            if cv2.waitKey(0) & 0xFF == ord('q'):
+            if cv2.waitKey(11) & 0xFF == ord('q'):
                 break
 
             if Values.PRINT_FPS:
@@ -188,7 +189,7 @@ def mode_0():
 def mode_1():
     camera = BasicCamera2()
     telemetry = TelemetryThread()
-    savingThread = SavingThread()
+    savingThread = SavingThread(None)
 
     img_id = 0
     telemetry_file = open(save_directory + "/telemetry.txt", "a+")
@@ -203,9 +204,8 @@ def mode_1():
                 continue
 
             if telemetry.altitude > Values.MIN_ALTITUDE:
-
-                savingThread.queue.put((save_directory + "/images/" + str(img_id) + ".jpg", frame))
-                #cv2.imwrite(save_directory + "/images/" + str(img_id) + ".png", frame)
+                savingThread.queue.put((3, save_directory + "/images/" + str(img_id) + ".jpg", frame))
+                # cv2.imwrite(save_directory + "/images/" + str(img_id) + ".png", frame)
                 img_id += 1
                 telemetry_file.write(telemetry.to_string() + "\n")
 
@@ -235,9 +235,10 @@ def mode_2():
     detector = Detector()
     telemetry = TelemetryThread()
     position_calculator = PositionCalculator(telemetry)
-    savingThread = SavingThread()
 
     firebaseConnection = FirebaseConnection()
+    savingThread = SavingThread(firebaseConnection)
+
     last_firebase_update = time.time()
     last_telemetry_publish_time = 0
 
@@ -264,13 +265,13 @@ def mode_2():
 
             update_detections_file = False
 
-            if telemetry.altitude > Values.MIN_ALTITUDE:    # and telemetry.state == Values.EXECUTING:
+            if telemetry.altitude > Values.MIN_ALTITUDE:  # and telemetry.state == Values.EXECUTING:
 
                 detections = detector.detect(frame)
 
                 if time.time() - last_telemetry_publish_time > Values.TELEMETRY_UPDATE_TIME:
                     last_telemetry_publish_time = time.time()
-                    firebaseConnection.queue.put((2, (telemetry.latitude, telemetry.longitude, telemetry.altitude)))
+                    savingThread.queue.put((2, (telemetry.latitude, telemetry.longitude, telemetry.altitude)))
 
                 position_calculator.update_meters_per_pixel()
                 position_calculator.calculate_max_meters_area()
@@ -310,15 +311,15 @@ def mode_2():
                         confirmed_detection_id += 1
                         filename = save_directory + "/detections/" + str(all_d.detection_id) + ".jpg"
 
-                        savingThread.queue.put((filename, get_frame_crop(frame_copy, all_d.rectangle)))
+                        savingThread.queue.put((3, filename, get_frame_crop(frame_copy, all_d.rectangle)))
 
                         all_d.filename = filename
                         all_d.firebase_path = firebaseConnection.storage_cloud_path + str(all_d.detection_id) + ".jpg"
                         confirmed_detections.append(all_d)
 
-                        firebaseConnection.queue.put((0, (all_d.detection_id, all_d.latitude, all_d.longitude,
-                                                          all_d.area_m, all_d.get_description(), all_d.filename,
-                                                          all_d.firebase_path, all_d.seen_times)))
+                        savingThread.queue.put((0, (all_d.detection_id, all_d.latitude, all_d.longitude,
+                                                    all_d.area_m, all_d.get_description(), all_d.filename,
+                                                    all_d.firebase_path, all_d.seen_times)))
 
                         update_detections_file = True
                         all_d.to_delete = True
@@ -352,7 +353,7 @@ def mode_2():
 
                     if update_firebase:
                         last_firebase_update = time.time()
-                        firebaseConnection.queue.put((1, detection_dict))
+                        savingThread.queue.put((1, detection_dict))
 
                 for conf_d in confirmed_detections:
 

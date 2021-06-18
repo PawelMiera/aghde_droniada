@@ -22,17 +22,13 @@ class Detection:
     def update_color_id(self):
         self.color_id = np.argmax(self.color)
 
-    def get_color_id(self):  # raczej do wywalenia :)
-        color_distance = 1000
-        color_id = None
-        for i, col in enumerate(Values.COLORS):
-            new_distance = np.sqrt(
-                (col[0] - self.color[0]) ** 2 + (col[1] - self.color[1]) ** 2 + (col[2] - self.color[2]) ** 2)
-            if new_distance < color_distance:
-                color_id = i
-                color_distance = new_distance
-
-        return color_id
+        if self.color_id == Values.WHITE:
+            if self.color[Values.ORANGE] >= self.color[Values.BROWN]:
+                if self.color[Values.ORANGE] > Values.MIN_NOT_WHITE:
+                    self.color_id = Values.ORANGE
+            else:
+                if self.color[Values.BROWN] > Values.MIN_NOT_WHITE:
+                    self.color_id = Values.BROWN
 
     def update_lat_lon(self, lat, lon):
         self.latitude = lat
