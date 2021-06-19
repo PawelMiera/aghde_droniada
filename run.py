@@ -34,7 +34,7 @@ def mode_0():
     detections_file = open(save_directory + "/detections.txt", "w")
 
     time_index = 0
-    id = 444
+    id = 1260
 
     base_path = 'D:/mission_images/5/'
 

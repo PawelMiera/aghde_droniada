@@ -143,7 +143,7 @@ class Detector(ImageProcessor):
                         detection_color = [0, 0, 0]
                         detection_color[c] += 1
 
-                        detection = Detection(shape, bb, area, detection_color, points, mid)
+                        detection = Detection(shape, bb, area * Values.AREA_INCREASE, detection_color, points, mid)
                         detections.append(detection)
 
         return detections

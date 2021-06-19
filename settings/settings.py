@@ -23,6 +23,8 @@ class Values:
     MAX_AREA = 12200
     MIN_ALTITUDE = 15
 
+    AREA_INCREASE = 1.3534
+
     MIN_NOT_WHITE = 8
 
     BOX_COLOR = (0, 0, 255)
